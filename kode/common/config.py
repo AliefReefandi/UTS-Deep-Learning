@@ -36,6 +36,10 @@ def add_common_args(p: argparse.ArgumentParser) -> argparse.ArgumentParser:
                    help="Folder output: checkpoint, grafik, CSV (default: <repo>/outputs)")
     p.add_argument("--pred_dir", type=str, default=str(REPO_ROOT),
                    help="Folder tujuan CSV prediksi final (default: root repo)")
+    p.add_argument("--results_dir", type=str, default=str(REPO_ROOT / "results"),
+                   help="Grafik/tabel final untuk laporan (<results_dir>/taskN/). Default: <repo>/results")
+    p.add_argument("--models_dir", type=str, default=str(REPO_ROOT / "models"),
+                   help="Bobot model final (default: <repo>/models)")
     p.add_argument("--seed", type=int, default=42)
     p.add_argument("--debug", action="store_true",
                    help="Subset kecil data + epoch sedikit, untuk uji cepat di lokal")
@@ -50,10 +54,14 @@ def resolve_paths(args, task: str):
     args.data_dir = Path(args.data_dir)
     args.out_dir = Path(args.out_dir)
     args.pred_dir = Path(args.pred_dir)
+    args.results_dir = Path(getattr(args, "results_dir", REPO_ROOT / "results"))
+    args.models_dir = Path(getattr(args, "models_dir", REPO_ROOT / "models"))
     args.task_out = args.out_dir / task
     if args.debug:
         args.task_out = args.task_out / "debug"   # hasil debug tidak menimpa hasil penuh
         args.pred_dir = args.task_out             # CSV prediksi debug juga tidak menimpa CSV final
+        args.results_dir = args.task_out / "results"
+        args.models_dir = args.task_out / "models_final"
     args.ckpt_dir = args.task_out / "checkpoints"
     for d in (args.task_out, args.ckpt_dir, args.pred_dir):
         d.mkdir(parents=True, exist_ok=True)

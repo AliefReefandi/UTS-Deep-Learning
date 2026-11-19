@@ -5,7 +5,9 @@
   python run_all.py --tasks 2 3 --data_dir /content/data --out_dir /content/drive/MyDrive/uts_out
 
 Menjalankan task1, task2, task3 berurutan; CSV prediksi ditulis ke root repo
-(atau --pred_dir), lalu divalidasi formatnya.
+(atau --pred_dir), lalu divalidasi formatnya. Versi library dicatat di <out_dir>/env_info.json.
+Task 1 = notebook Alief (kode/01_Task1_Classification.ipynb) dieksekusi dengan nbconvert,
+hanya di Colab (lihat kode/task1/main.py); di lokal/--debug dilewati.
 """
 import argparse
 import sys
@@ -18,6 +20,8 @@ from kode.common.utils import env_info, save_json
 def main():
     p = add_common_args(argparse.ArgumentParser(description="UTS DL - jalankan semua task"))
     p.add_argument("--tasks", nargs="+", type=int, default=[1, 2, 3], choices=[1, 2, 3])
+    p.add_argument("--task1_zip", default=None,
+                   help="zip data di Drive untuk notebook Task 1 (default: env UTS_ZIP_PATH / MyDrive/data_uts_dl.zip)")
     args = p.parse_args()
 
     from pathlib import Path
@@ -35,8 +39,11 @@ def main():
             # default argumen khusus task (mis. --models, --epochs Task 2), lalu ditimpa argumen umum.
             # Namespace baru per task agar resolve_paths satu task tidak memengaruhi task lain.
             ns = modules[t].build_parser().parse_args([])
-            for key in ("data_dir", "out_dir", "pred_dir", "seed", "debug", "device", "resume"):
+            for key in ("data_dir", "out_dir", "pred_dir", "results_dir", "models_dir",
+                        "seed", "debug", "device", "resume"):
                 setattr(ns, key, getattr(args, key))
+            if t == 1 and args.task1_zip:
+                ns.task1_zip = args.task1_zip
             modules[t].run(ns)
         except Exception:
             traceback.print_exc()
