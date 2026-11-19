@@ -1,0 +1,213 @@
+{
+  "n": 36000,
+  "mikroskop": {
+    "M1": 21636,
+    "M2": 14364
+  },
+  "gambar_shape": [
+    64,
+    64
+  ],
+  "spektrum_len": 128,
+  "nan_spektrum": 0,
+  "brightness": {
+    "M1": {
+      "mean": 127.8,
+      "std": 12.06,
+      "min": 77.97,
+      "max": 175.14
+    },
+    "M2": {
+      "mean": 146.07,
+      "std": 11.02,
+      "min": 100.46,
+      "max": 184.6
+    }
+  },
+  "kontras": {
+    "M1": {
+      "mean": 19.7,
+      "std": 5.38,
+      "min": 7.04,
+      "max": 34.02
+    },
+    "M2": {
+      "mean": 19.9,
+      "std": 4.65,
+      "min": 9.97,
+      "max": 35.32
+    }
+  },
+  "validasi_estimator_sintetis": {
+    "galat_orientasi_median_deg": 0.84,
+    "galat_orientasi_p95_deg": 3.97,
+    "histogram_12_bin_sudut_seragam": [
+      217,
+      239,
+      258,
+      300,
+      238,
+      229,
+      210,
+      262,
+      304,
+      272,
+      237,
+      234
+    ],
+    "rasio_bin_maks_min_sudut_seragam": 1.45,
+    "lambda_terukur_median": {
+      "5.0": 4.92,
+      "11.0": 10.48
+    }
+  },
+  "orientasi": {
+    "frac_koherensi_gt_0.5": 0.4346111111111111,
+    "histogram_12_bin": [
+      1107,
+      1274,
+      1486,
+      1550,
+      1303,
+      1109,
+      1108,
+      1243,
+      1494,
+      1516,
+      1273,
+      1183
+    ],
+    "rasio_bin_maks_min": 1.4001806684733513
+  },
+  "panjang_gelombang_px": {
+    "count": 36000.0,
+    "mean": 10.72,
+    "std": 5.11,
+    "min": 4.01,
+    "5%": 4.71,
+    "50%": 10.44,
+    "95%": 21.71,
+    "max": 39.07
+  },
+  "rasio_median_lambda_M2_M1": {
+    "garis halus (λ<8)": 0.972,
+    "garis kasar (λ>=8)": 0.905,
+    "isotropik (koh<0.2)": 0.831
+  },
+  "auc_tebak_mikroskop": {
+    "gambar: brightness+kontras": 0.869,
+    "gambar: PSD (terstandardisasi)": 0.883,
+    "gambar: rasio frek. tinggi": 0.72,
+    "spektrum mentah": 0.504,
+    "spektrum diproses": 0.508
+  },
+  "spike": {
+    "pct_titik": 0.20019531249999997,
+    "pct_spektrum_dgn_spike": 22.458333333333332,
+    "jumlah_per_spektrum": [
+      27915,
+      7042,
+      951,
+      87,
+      5
+    ],
+    "residual_maks_celah": [
+      0.373046875,
+      0.7978515625
+    ],
+    "residual_min": -0.5263671875
+  },
+  "baseline": {
+    "offset": {
+      "count": 36000.0,
+      "mean": 0.251,
+      "std": 0.24,
+      "min": -0.63,
+      "5%": -0.143,
+      "50%": 0.251,
+      "95%": 0.644,
+      "max": 1.082
+    },
+    "kemiringan": {
+      "count": 36000.0,
+      "mean": -0.007,
+      "std": 0.209,
+      "min": -0.882,
+      "5%": -0.351,
+      "50%": -0.007,
+      "95%": 0.337,
+      "max": 0.803
+    },
+    "lengkung": {
+      "count": 36000.0,
+      "mean": -0.025,
+      "std": 0.084,
+      "min": -0.458,
+      "5%": -0.166,
+      "50%": -0.023,
+      "95%": 0.108,
+      "max": 0.295
+    }
+  },
+  "noise_std": {
+    "count": 36000.0,
+    "mean": 0.035,
+    "std": 0.0042,
+    "min": 0.022,
+    "5%": 0.029,
+    "50%": 0.0348,
+    "95%": 0.0418,
+    "max": 0.2078
+  },
+  "puncak": {
+    "jumlah_puncak_per_spektrum": {
+      "2": 28,
+      "3": 34794,
+      "4": 846,
+      "5": 219,
+      "6": 70,
+      "7": 26,
+      "8": 9,
+      "9": 4,
+      "10": 2,
+      "11": 2
+    },
+    "tinggi_puncak": {
+      "count": 36000.0,
+      "mean": 1.11,
+      "std": 0.332,
+      "min": 0.3,
+      "5%": 0.664,
+      "50%": 1.06,
+      "95%": 1.723,
+      "max": 3.616
+    }
+  },
+  "shift": {
+    "k_pola_puncak": 3,
+    "silhouette": {
+      "2": 0.68,
+      "3": 0.695,
+      "4": 0.656,
+      "5": 0.582,
+      "6": 0.524,
+      "7": 0.484,
+      "8": 0.462,
+      "9": 0.444,
+      "10": 0.434
+    },
+    "std_posisi_absolut": [
+      3.08,
+      3.93,
+      4.3
+    ],
+    "std_jarak_p2_p1": 1.8095448561888297,
+    "std_jarak_p3_p1": 1.9909596046699418,
+    "korelasi_deviasi_p1_p2": 0.8951921304720627,
+    "korelasi_deviasi_p1_p3": 0.9071640396733578,
+    "shift_global_p2.5_p97.5": [
+      -7.18,
+      7.16
+    ]
+  }
+}
