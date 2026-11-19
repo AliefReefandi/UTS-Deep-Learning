@@ -25,13 +25,30 @@ from kode.common.utils import save_json
 PRED_FILE = "cluster.csv"
 
 
+def embed_from_saved_models(args, sdir, img, spec, device, log=print):
+    """Embedding dihitung ulang dari bobot SimCLR final di models/ (tanpa training ulang).
+    Dipakai jika embedding belum ada, mis. setelah clone repo baru: bobotnya ada di repo
+    (task3_simclr_*.pt, ~6 MB), embedding-nya tidak (outputs/ tidak di-commit)."""
+    from kode.task3.data import preprocess_spectrum
+    from kode.task3.encoders import build
+    from kode.task3.ssl import embed
+    data = {"gambar": torch.from_numpy(img).to(device), "spektrum": torch.from_numpy(preprocess_spectrum(spec)).to(device)}
+    sdir.mkdir(parents=True, exist_ok=True)
+    for m in ("gambar", "spektrum"):
+        w = args.models_dir / f"task3_simclr_{m}.pt"
+        if not w.exists():
+            raise FileNotFoundError(f"{sdir / f'emb_{m}.npy'} dan {w} tidak ada: jalankan 3b (tanpa --no-ssl) "
+                                    f"atau ekstrak embedding_task3.zip ke {sdir}")
+        model = build(m).to(device)
+        model.load_state_dict(torch.load(w, map_location=device))
+        log(f"  embedding {m} dihitung dari {w.name} ...")
+        np.save(sdir / f"emb_{m}.npy", embed(model, data[m], m).astype(np.float16))
+
+
 def load_embeddings(sdir, n):
     emb = {}
     for m in ("gambar", "spektrum"):
         f = sdir / f"emb_{m}.npy"
-        if not f.exists():
-            raise FileNotFoundError(f"{f} tidak ada: jalankan 3b (tanpa --no-ssl) atau ekstrak "
-                                    f"embedding_task3.zip ke {sdir}")
         emb[m] = np.load(f).astype(np.float32)
         assert len(emb[m]) == n, f"{f}: {len(emb[m])} baris, data {n} (embedding debug vs penuh tertukar?)"
     return emb
@@ -45,8 +62,13 @@ def run_clustering(args, log=print):
     cdir.mkdir(parents=True, exist_ok=True)
     img, spec, meta = load(args)
     mic = meta.mikroskop.to_numpy()
-    emb = load_embeddings(args.task_out / "ssl", len(meta))
     dbg = args.debug
+    sdir = args.task_out / "ssl"
+    if not all((sdir / f"emb_{m}.npy").exists() for m in ("gambar", "spektrum")):
+        if dbg:
+            raise FileNotFoundError(f"embedding debug tidak ada di {sdir}: jalankan dengan --ssl --debug dulu")
+        embed_from_saved_models(args, sdir, img, spec, device, log)
+    emb = load_embeddings(sdir, len(meta))
     summary = {"n": len(meta), "device": str(device)}
 
     # ---- c. fusion
