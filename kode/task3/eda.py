@@ -38,7 +38,7 @@ def _radial_index(n=64):
     onehot = np.zeros((n * n, R_MAX + 1), np.float32)
     ok = r <= R_MAX
     onehot[np.where(ok)[0], r[ok]] = 1
-    return onehot / onehot.sum(0, keepdims=True)
+    return onehot / np.maximum(onehot.sum(0, keepdims=True), 1)   # cincin kosong (gambar < 64 px) -> 0
 
 
 def image_stats(img: np.ndarray, chunk: int = 4000):

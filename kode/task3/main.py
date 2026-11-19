@@ -1,6 +1,6 @@
 """Task 3 - Clustering multimodal (gambar mikrostruktur + spektrum), 36.000 sampel tanpa label.
 
-Status: a selesai, b-f menyusul.
+Status: a-b selesai, c-f menyusul.
   a. eda.py        - distorsi gambar (rotasi, skala, brightness, M1 vs M2) & spektrum (shift, baseline, spike)
   b. ssl.py        - representation learning tanpa label (SimCLR/AE) + augmentasi
   c. fusion.py     - embedding gambar + spektrum, gabungan; ablasi satu modalitas
@@ -23,15 +23,22 @@ def run(args):
     if args.eda:
         from kode.task3 import eda
         eda.run(copy.copy(args))
-    print("[task3] b-f belum diimplementasi; cluster.csv belum dibuat")
-    return None
+    from kode.task3 import ssl
+    try:
+        emb = ssl.run(copy.copy(args))
+    except ssl.TimeUp:
+        print("[task3] SSL berhenti karena --max_minutes; jalankan ulang perintah yang sama untuk melanjutkan")
+        return None
+    print("[task3] c-f belum diimplementasi; cluster.csv belum dibuat")
+    return emb
 
 
 def build_parser():
     p = add_common_args(argparse.ArgumentParser(description="Task 3 - Clustering"))
     p.add_argument("--eda", action=argparse.BooleanOptionalAction, default=True,
                    help="buat ulang grafik EDA (3a)")
-    return p
+    from kode.task3.ssl import add_ssl_args
+    return add_ssl_args(p)
 
 
 if __name__ == "__main__":
