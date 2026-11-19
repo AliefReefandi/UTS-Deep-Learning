@@ -1,0 +1,26 @@
+{
+  "W": 50,
+  "n_fitur_per_langkah": 16,
+  "fitur": [
+    "s02",
+    "s03",
+    "s04",
+    "s07",
+    "s08",
+    "s09",
+    "s11",
+    "s12",
+    "s13",
+    "s14",
+    "s15",
+    "s17",
+    "s20",
+    "s21",
+    "umur(siklus/300)",
+    "mask"
+  ],
+  "n_window_train_total": 254174,
+  "pct_window_dgn_padding": 17.35031907276118,
+  "n_window_test": 300,
+  "test_dgn_padding": 0
+}

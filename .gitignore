@@ -1,0 +1,12 @@
+data/
+.venv/
+venv/
+
+# hasil kerja mentah (checkpoint, log, debug). Grafik/tabel final disalin ke results/taskN/
+outputs/
+*.tmp
+
+# Python / Jupyter
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
