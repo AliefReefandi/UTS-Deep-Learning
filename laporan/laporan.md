@@ -19,44 +19,44 @@ berkas hasil di `results/`. Reproduksi: `python run_all.py` (seed 42; versi libr
 | 2. Prediksi RUL | LSTM, ensemble 5 fold | Gradient boosting (non-DL), TCN, Transformer | RMSE 19,14; skor 4.673 / 300 mesin | `prediksi_rul.csv` |
 | 3. Clustering material | SimCLR + FusionAE + IDEC | KMeans, GMM | k = 6; stabilitas 0,96 | `cluster.csv` |
 
-<!-- ALIEF: cek pemetaan subbab 1.1–1.7 ke poin a–g soal Task 1 dan sesuaikan judulnya. -->
-
 # Task 1 – Klasifikasi Multimodal Cacat Produk
 
 Tujuan: mengklasifikasikan unit produk ke 7 kelas (normal, gores, noda, retak, gelembung, las_dingin,
 kontaminasi) dari foto permukaan 64×64 dan sinyal sensor 3 kanal × 128 titik (suhu, getaran, arus).
-Data latih 48.000 unit, data uji 16.000 unit. Notebook: `kode/01_Task1_Classification.ipynb`.
+Data latih 48.000 unit, data uji 16.000 unit. Metrik: **Macro-F1**. Notebook: `kode/01_Task1_Classification.ipynb`.
 
-## 1.1 Eksplorasi data
+## 1a. Eksplorasi data
 
-- **Kelas tidak seimbang:** normal 23.888 (49,8%), kontaminasi hanya 2.357 (4,9%). Karena itu metrik
-  utama adalah **Macro-F1**, yang memberi bobot sama untuk tiap kelas.
-- **Domain shift antar-lini:** data latih didominasi lini A (74,9%), sedangkan data uji didominasi
-  lini B (60,0%). Ini diuji khusus di bagian 1.5.
-- **Missing value sensor** sekitar 5,9% per kanal, tersebar merata di ketiga kanal.
-- **Sensor:** suhu terkonsentrasi di 181–182 °C, getaran bimodal di sekitar nol, arus 9–10 A dengan ekor ke bawah.
-- **Citra:** tekstur granular/bintik dan garis memanjang/diagonal, dengan perbedaan antar-kelas yang halus.
+- **Distribusi kelas tidak seimbang:** dari normal 23.888 (49,8%) sampai kontaminasi 2.357 (4,9%).
+  Karena itu dipakai Macro-F1, split stratified, dan cross-entropy berbobot kelas.
+- **Contoh tiap kelas:**
+  - *Citra:* tekstur granular/bintik dan garis memanjang/diagonal; perbedaan antar-kelas halus.
+  - *Sensor:* suhu terkonsentrasi di 181–182 °C, getaran bimodal di sekitar nol, arus 9–10 A dengan ekor ke bawah.
+- **Rekaman sensor hilang:**
+  - 5,9–6,0% nilai per kanal; 3.863 unit (8,1%) punya minimal satu nilai hilang.
+  - Per kelas merata (5,2% kontaminasi sampai 6,5% retak), sehingga pola missing tidak membocorkan kelas.
+- **Perbedaan latih–uji:** latih lini A 74,9% / B 25,1%, sedangkan uji lini A 40,0% / B 60,0%. Ini
+  potensi domain shift yang diuji di 1e. Validasi (split acak) mengikuti distribusi latih: A 7.153 / B 2.447.
 
-## 1.2 Preprocessing
+<!-- ALIEF: soal minta contoh tiap kelas di kedua modalitas. Grid contoh citra dan sinyal per kelas ada di notebook (sel 10–11) tetapi belum disimpan ke results/task1. Simpan satu gambar gabungan dan tambahkan di sini. -->
 
-- Label di-encode ke 0–6. Citra dibagi 255.
-- Split **stratified 80/20** (seed 42): 38.400 latih / 9.600 validasi, proporsi kelas terjaga.
-- **Imputasi sensor:** rata-rata per titik waktu dari data latih saja. Setelah itu z-score per kanal
-  dengan statistik data latih, dipakai juga untuk validasi dan uji, sehingga tidak ada kebocoran.
+**Preprocessing:**
+- Citra dibagi 255. Split stratified 80/20 (seed 42): 38.400 latih / 9.600 validasi.
+- Nilai sensor yang hilang diisi rata-rata per titik waktu dari data latih, lalu z-score per kanal dengan
+  statistik latih. Semua statistik hanya dari data latih, jadi tidak bocor ke validasi atau uji.
 
-## 1.3 Arsitektur
+## 1b. Arsitektur dan strategi fusion
 
 - **Encoder citra:** CNN 3 blok (Conv–BN–ReLU–Pool; 32/64/128 filter) dengan global average pooling → 128 dimensi.
-- **Encoder sensor:** CNN 1D 3 blok (kernel 5/5/3) dengan global average pooling → 128 dimensi.
-- **Image-only / sensor-only:** encoder + dropout 0,3 + linear.
-- **Feature Fusion:** konkatenasi dua fitur (256) → MLP 128 → 7 kelas.
-- **Decision Fusion:** dua kepala klasifikasi terpisah; logit dirata-rata.
+- **Encoder sinyal:** CNN 1D 3 blok (kernel 5/5/3) dengan global average pooling → 128 dimensi.
+- **Dua strategi fusion yang dibandingkan:**
+  - *Feature-level (early/intermediate) fusion:* embedding kedua encoder dikonkatenasi (256) → MLP 128
+    → 7 kelas. Interaksi antar-modalitas dapat dipelajari.
+  - *Decision-level (late) fusion:* tiap modalitas punya kepala klasifikasi sendiri, lalu logit dirata-rata.
 - **Training:** Adam (lr 3·10⁻⁴), cross-entropy berbobot kelas (*balanced*), batch 64, maks. 30 epoch,
   early stopping (patience 8) pada Macro-F1 validasi.
 
-## 1.4 Perbandingan model (3 seed: 42, 123, 2026)
-
-| Model | Mean Macro-F1 | Std |
+| Model (3 seed: 42, 123, 2026) | Mean Macro-F1 | Std |
 |---|---:|---:|
 | **Feature Fusion** | **0,6591** | 0,0126 |
 | Decision Fusion | 0,6409 | 0,0242 |
@@ -65,54 +65,70 @@ Data latih 48.000 unit, data uji 16.000 unit. Notebook: `kode/01_Task1_Classific
 
 ![Perbandingan model, rata-rata 3 seed](../results/task1/comparison_3_seeds.png){width=62%}
 
-- Fusion jauh lebih baik dari satu modalitas (+0,23 dari sensor-only): citra dan sensor membawa
-  informasi yang saling melengkapi.
-- Feature Fusion sedikit lebih baik dan lebih stabil daripada Decision Fusion. Penggabungan di tingkat
-  fitur memungkinkan interaksi antar-modalitas, sedangkan rata-rata logit menggabungkan dua keputusan
-  yang dibuat terpisah. Model final: Feature Fusion (`models/feature_fusion_final.pth`).
+**Feature Fusion dipilih sebagai model final** (`models/feature_fusion_final.pth`): skornya lebih tinggi
+dan variasinya antar-seed separuh dari Decision Fusion. Rata-rata logit menggabungkan dua keputusan yang
+dibuat terpisah, sehingga modalitas yang lemah (citra) ikut menarik prediksi.
 
-<!-- ALIEF: confusion matrix dan learning curve yang tersimpan adalah Decision Fusion (seed 42), bukan model final Feature Fusion. Pertimbangkan menyimpan versi Feature Fusion. -->
+## 1c. Nilai tiap modalitas
+
+- **Sensor-only (0,434) jauh lebih informatif daripada image-only (0,312)**, tetapi gabungan keduanya
+  +0,23 di atas sensor-only. Jadi kedua modalitas membawa informasi yang saling melengkapi.
+- **Per kelas** (Decision Fusion, seed 42; Macro-F1 0,682, akurasi 71,3%):
+  - *las_dingin* paling mudah (F1 0,94).
+  - *gores* paling sulit (F1 0,29): 641 dari 1.124 sampel diprediksi *normal*. Goresan tipis sulit
+    terlihat di citra 64×64, dan pola sensornya mirip normal.
 
 ![Confusion matrix (Decision Fusion, seed 42)](../results/task1/Confusion Matrix.png){width=55%}
 
+<!-- ALIEF: soal minta "kelas mana butuh modalitas mana". Yang ada baru per kelas untuk Decision Fusion. Tambahkan tabel F1 per kelas untuk image-only, sensor-only, dan Feature Fusion (classification_report pada model yang sudah dilatih), lalu tulis kelas mana yang bergantung pada citra dan mana pada sensor. -->
+
+## 1d. Label tidak sempurna
+
+- **Eksperimen yang dilakukan:** sebagian label latih diacak (simulasi label noise), lalu Decision
+  Fusion dilatih ulang.
+- **Hasil:** Macro-F1 validasi 0,682 (0%) → 0,609 (10%) → 0,548 (20%). Penurunannya bertahap, tidak runtuh.
+
+<!-- ALIEF: soal minta (1) cek kemungkinan mislabel pada data asli, mis. sampel dengan loss tinggi / confidence rendah pada label sendiri dari prediksi out-of-fold, lalu periksa contohnya; dan (2) uji satu teknik robust, mis. label smoothing (CrossEntropyLoss(label_smoothing=0.1)) atau co-teaching, dibandingkan dengan CE biasa pada noise 10%/20%. Keduanya belum ada di notebook. -->
+
+## 1e. Domain shift antar-lini
+
+| Model (Decision Fusion) | Data latih | Macro-F1 validasi lini B |
+|---|---|---:|
+| Normal | lini A + B | 0,587 |
+| Tanpa lini B | lini A saja | **0,197** |
+
+- Bahkan dengan kedua lini di data latih, Macro-F1 di lini B (0,587) lebih rendah daripada validasi
+  keseluruhan (0,682), jadi lini B memang lebih sulit.
+- Tanpa contoh lini B, performa runtuh ke 0,197.
+- Data uji 60% lini B, sehingga skor uji kemungkinan lebih rendah daripada validasi.
+
+<!-- ALIEF: soal minta (1) performa per lini di validasi: tambahkan Macro-F1 lini A untuk model normal; dan (2) satu teknik untuk mengatasi shift, mis. normalisasi sensor per lini (statistik z-score dihitung per lini) atau augmentasi, dievaluasi pada skenario latih A → uji B. Teknik ini belum ada di notebook. -->
+
+## 1f. Modalitas hilang
+
+- **Uji saat inferensi** pada validasi:
+  - *Citra hilang:* diganti citra rata-rata data latih.
+  - *Sensor hilang:* diisi nol, yaitu rata-rata latih setelah z-score.
+- **Hasil (Decision Fusion):** lengkap 0,682; tanpa citra 0,351; **tanpa sensor 0,301**.
+- Saat sensor tidak terekam, prediksi masih di atas tebakan acak dan setara model image-only (0,312).
+  Model tidak runtuh, tetapi juga belum dilatih untuk kondisi ini.
+
+<!-- ALIEF: soal minta model "tetap memberi prediksi masuk akal saat sensor tidak terekam". Pertimbangkan modality dropout saat training (sensor dinolkan acak, mis. p = 0,3) pada Feature Fusion, lalu bandingkan skor tanpa sensor dengan image-only. Uji juga pada Feature Fusion (model final), bukan hanya Decision Fusion. -->
+
+## 1g. Training: sanity check, learning curve, dan seed
+
+- **Sanity check:** melatih dengan seluruh label latih diacak menurunkan Macro-F1 validasi dari 0,682
+  ke **0,137**, setara tebakan. Model memang mempelajari hubungan input–label, bukan artefak pipeline.
+- **Learning curve** (Decision Fusion, seed 42): train loss turun terus, val loss berfluktuasi tajam
+  (puncak di epoch 9 dan 20).
+  - Epoch terbaik 16, dipilih dengan early stopping pada Macro-F1 validasi.
+  - Validasi yang sama juga dipakai untuk pelaporan, sehingga angkanya sedikit optimistis.
+- **3 seed:** semua model dilatih dengan seed 42, 123, dan 2026 (tabel 1b). Model final Feature Fusion: 0,659 ± 0,013.
+- **Prediksi uji:** 16.000 unit → `prediksi_klasifikasi.csv` (`id_unit,kelas`), lolos `python -m kode.validasi_csv`.
+
 ![Kurva training Decision Fusion (seed 42)](../results/task1/learning_curves.png){width=85%}
 
-**Per kelas** (Decision Fusion, seed 42; Macro-F1 0,682, akurasi 71,3%):
-- *las_dingin* paling mudah (F1 0,94).
-- *gores* paling sulit (F1 0,29): 641 dari 1.124 sampel gores diprediksi *normal*. Goresan tipis sulit
-  terlihat pada citra 64×64, dan pola sensornya mirip normal.
-- **Kurva training:** val loss berfluktuasi tajam (puncak epoch 9 dan 20) sementara train loss terus
-  turun. Pemilihan epoch terbaik pada set validasi yang sama dengan pelaporan membuat angka sedikit optimistis.
-
-## 1.5 Robustness
-
-| Eksperimen | Kondisi | Macro-F1 validasi |
-|---|---|---:|
-| Label noise (label latih diacak sebagian) | 0% / 10% / 20% | 0,682 / 0,609 / 0,548 |
-| Domain shift (evaluasi pada lini B) | latih A+B / latih A saja | 0,587 / **0,197** |
-| Missing modality (saat inferensi) | lengkap / tanpa citra / tanpa sensor | 0,682 / 0,351 / 0,301 |
-
-- **Label noise:** penurunan bertahap, tidak runtuh. Model masih > 0,54 pada noise 20%. Ini relevan
-  karena label inspektur tidak dijamin benar.
-- **Domain shift** adalah risiko terbesar: tanpa data lini B, Macro-F1 di lini B turun ke 0,197. Karena
-  data uji 60% lini B, kedua lini wajib ada di data latih.
-- **Missing modality:** model belum dilatih untuk kehilangan modalitas (mis. dengan modality dropout),
-  sehingga performanya turun ke tingkat satu modalitas.
-
-<!-- ALIEF: eksperimen 1.5 dan 1.6 memakai Decision Fusion, sedangkan model final Feature Fusion. Jelaskan alasannya atau ulangi untuk Feature Fusion. -->
-
-## 1.6 Sanity check
-
-Melatih dengan label latih yang diacak total menurunkan Macro-F1 validasi dari 0,682 ke **0,137**,
-mendekati tingkat tebakan acak untuk 7 kelas. Jadi model memang mempelajari hubungan input–label,
-bukan artefak pipeline.
-
-## 1.7 Prediksi data uji
-
-Model final Feature Fusion memprediksi 16.000 unit uji ke `prediksi_klasifikasi.csv` (`id_unit,kelas`).
-Format lolos `python -m kode.validasi_csv`.
-
-<!-- ALIEF: tambahkan baseline non-DL bila diminta soal, dan catat distribusi kelas prediksi test (cek pengaruh domain shift lini B). -->
+<!-- ALIEF: (1) soal minta sanity check "overfit 1 batch" (latih pada satu batch sampai loss ≈ 0 / akurasi 100%); yang ada adalah uji label acak, jadi tambahkan overfit 1 batch atau jelaskan. (2) Learning curve, confusion matrix, dan eksperimen 1c–1f memakai Decision Fusion seed 42, sedangkan model final Feature Fusion: simpan learning curve Feature Fusion atau jelaskan alasannya. (3) Catat distribusi kelas prediksi test untuk mengecek pengaruh lini B. -->
 
 # Task 2 – Prediksi Remaining Useful Life (RUL)
 

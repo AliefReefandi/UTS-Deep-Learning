@@ -136,10 +136,23 @@ memulihkan material dengan ARI > 0,9) dan `python -m kode.task3.test_ssl`.
 - Label diacak → Macro-F1 0,137 ≈ tebakan.
 - Membuktikan tidak ada kebocoran label lewat pipeline.
 
-**Kelemahan yang mungkin ditanyakan (siapkan jawaban):**
-- Confusion matrix dan robustness memakai Decision Fusion seed 42, bukan model final.
+**Kelemahan yang mungkin ditanyakan (siapkan jawaban; tutup sebelum ujian jika sempat):**
+- Confusion matrix, learning curve, dan eksperimen 1c–1f memakai Decision Fusion seed 42, bukan model final.
 - Epoch terbaik dipilih pada validasi yang sama dengan pelaporan.
-- Tidak ada baseline non-DL.
+- Butir soal yang belum lengkap di notebook:
+  - *1a:* gambar contoh tiap kelas belum disimpan ke `results/task1`.
+  - *1c:* F1 per kelas untuk image-only dan sensor-only.
+  - *1d:* cek mislabel dan teknik robust (label smoothing / co-teaching).
+  - *1e:* Macro-F1 lini A dan teknik mengatasi shift (normalisasi per lini / augmentasi).
+  - *1f:* modality dropout supaya prediksi tanpa sensor tetap masuk akal.
+  - *1g:* sanity check overfit 1 batch.
+
+**Jika ditanya label smoothing:** target one-hot diganti (1 − ε) untuk kelas benar dan ε/(K − 1) untuk
+kelas lain. Model tidak dipaksa 100% yakin, sehingga label yang salah tidak menarik bobot terlalu jauh.
+
+**Jika ditanya overfit 1 batch:** model harus bisa menghafal satu batch kecil (loss → 0). Jika gagal,
+ada bug di arsitektur, loss, atau pemasangan label. Uji label acak (yang sudah dilakukan) menguji hal
+sebaliknya: tanpa hubungan input–label, skor harus jatuh ke tingkat tebakan.
 
 ---
 
