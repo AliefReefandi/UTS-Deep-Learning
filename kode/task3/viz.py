@@ -45,7 +45,10 @@ def knn_overlap(Z, lab, k_nn=15, n=10000, seed=0) -> pd.DataFrame:
     return pd.DataFrame(M)
 
 
-def hard_pairs(M: pd.DataFrame, q: np.ndarray | None, lab, top=3) -> pd.DataFrame:
+def hard_pairs(M: pd.DataFrame, q: np.ndarray | None, lab, top=3, sep: dict | None = None) -> pd.DataFrame:
+    """Urutan: tumpang tindih kNN (ruang gabungan) menurun, lalu akurasi pasangan dari satu modalitas
+    (sep: {nama: tabel pairwise_separability}) menaik -> pasangan yang hanya bisa dibedakan oleh satu
+    modalitas ikut terangkat walaupun di ruang gabungan sudah terpisah."""
     K = len(M)
     rows = []
     second = None
@@ -58,8 +61,15 @@ def hard_pairs(M: pd.DataFrame, q: np.ndarray | None, lab, top=3) -> pd.DataFram
             if second is not None:
                 cnt = second.get(b, pd.Series(dtype=float)).get(a, 0) + second.get(a, pd.Series(dtype=float)).get(b, 0)
                 r["n_runner_up_IDEC"] = int(cnt)
+            for nm, df in (sep or {}).items():
+                m = df[(df.cluster_a == a) & (df.cluster_b == b)]
+                r[f"akurasi_pasangan_{nm}"] = float(m.akurasi.iloc[0]) if len(m) else np.nan
             rows.append(r)
-    return pd.DataFrame(rows).sort_values("overlap_kNN_pct", ascending=False).head(top).reset_index(drop=True)
+    out = pd.DataFrame(rows)
+    acc_cols = [c for c in out if c.startswith("akurasi_pasangan_")]
+    out["akurasi_satu_modalitas_min"] = out[acc_cols].min(1) if acc_cols else np.nan
+    out = out.sort_values(["overlap_kNN_pct", "akurasi_satu_modalitas_min"], ascending=[False, True])
+    return out.head(top).reset_index(drop=True)
 
 
 # ------------------------------------------------------------------ grafik
@@ -129,7 +139,7 @@ def plot_hard(M: pd.DataFrame, pairs: pd.DataFrame, img, spec_pp, lab, path, n_i
     P = len(pairs)
     fig = plt.figure(figsize=(14, 2.6 * max(P, 2)))
     gs = fig.add_gridspec(max(P, 2), 1 + 2 * n_img + 1, width_ratios=[3.2] + [1] * (2 * n_img) + [2.6],
-                          wspace=.08, hspace=.35)
+                          wspace=.08, hspace=.6)
     ax = fig.add_subplot(gs[:, 0])
     K = len(M)
     Ms = (M.to_numpy() + M.to_numpy().T) / 2 * 100
@@ -154,10 +164,12 @@ def plot_hard(M: pd.DataFrame, pairs: pd.DataFrame, img, spec_pp, lab, path, n_i
                     axi.set_title(f"cluster {c}", fontsize=8, loc="left")
         axs = fig.add_subplot(gs[r, -1])
         for half, c in enumerate((a_, b_)):
-            axs.plot(spec_pp[lab == c].mean(0), color=SERIES[half], lw=1.1, label=f"c{c}")
+            axs.plot(spec_pp[lab == c].mean(0), color=SERIES[half], lw=1.1, ls=("-", "--")[half], label=f"c{c}")
         axs.set_yticks([])
         axs.legend(fontsize=7)
-        axs.set_title(f"overlap {row.overlap_kNN_pct:.1f}%", fontsize=8)
+        extra = "".join(f"\nakurasi {col.replace('akurasi_pasangan_', '')} saja: {row[col]:.2f}"
+                        for col in pairs if col.startswith("akurasi_pasangan_"))
+        axs.set_title(f"overlap kNN {row.overlap_kNN_pct:.1f}%{extra}", fontsize=7)
     fig.suptitle("Pasangan cluster yang paling sulit dipisahkan", fontsize=10)
     savefig(fig, path)
 

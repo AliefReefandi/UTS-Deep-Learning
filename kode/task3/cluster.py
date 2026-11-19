@@ -17,6 +17,10 @@ IDEC = DEC (Xie et al. 2016) + rekonstruksi (Guo et al. 2017):
      latent tidak rusak/collapse.
   6. Berhenti jika < 0,1% label berubah antar-epoch (tol) atau mencapai max_epoch.
 
+Setelah IDEC: refinement hierarkis (refine_by_block) memeriksa apakah ada cluster yang di dalamnya
+masih berisi dua kelompok yang hanya terlihat di blok gambar. Hasilnya analisis ALTERNATIF
+(cluster_alternatif_k*.csv); cluster final tetap k dari aturan 3e kecuali --refine.
+
 Pembanding tanpa label (tidak ada ARI asli):
   silhouette di latent, stabilitas antar-seed (ARI 3 seed), kesepakatan antar-metode (ARI),
   Cramér's V terhadap mikroskop (rendah = tidak mengelompok menurut alat), ukuran cluster terkecil.
@@ -157,6 +161,54 @@ def pick_final(df: pd.DataFrame, min_pct: float = 0.5) -> str:
     return str(alt.silhouette_latent_FusionAE.idxmax())
 
 
+# ------------------------------------------------------------------ penyempurnaan hierarkis
+PURITY_MIN = 0.99   # cluster baru harus >= 99% berasal dari SATU cluster lama (pemecahan murni)
+
+
+def refine_by_block(final: np.ndarray, B: np.ndarray, mic: np.ndarray, seed: int, max_steps: int = 3,
+                    log=print):
+    """Pecah cluster final yang di dalamnya masih ada dua kelompok yang hanya terlihat di satu modalitas.
+
+    Alasan: k dipilih di ruang gabungan. Dua tekstur dengan spektrum yang SAMA hanya berbeda di blok
+    gambar, sehingga di ruang gabungan perbedaannya tertutup variasi spektrum di dalam cluster, dan
+    kriteria global (silhouette, DB, CH) cenderung memilih partisi yang lebih kasar.
+    Aturan (diulang sampai gagal):
+      1. KMeans(k+1) pada blok B (blok gambar setelah koreksi mikroskop).
+      2. Diterima hanya jika hasilnya PEMECAHAN MURNI: tepat satu cluster lama terbagi dua dan
+         semua cluster baru >= PURITY_MIN berasal dari satu cluster lama (cluster lain tidak terganggu).
+      3. Dan pemecahan itu tidak mengikuti mikroskop: Cramér's V(sub-cluster, mikroskop) < MIC_V_MAX.
+    """
+    from sklearn.cluster import KMeans
+    from kode.task3.fusion import MIC_V_MAX
+    lab = final.copy()
+    steps = []
+    for _ in range(max_steps):
+        k = int(lab.max()) + 1
+        new = KMeans(k + 1, n_init=10, random_state=seed).fit_predict(B)
+        ct = pd.crosstab(lab, new)
+        parent = ct.idxmax(0)
+        purity = float((ct.max(0) / ct.sum(0)).min())
+        cnt = parent.value_counts()
+        rec = {"k_dari": k, "k_ke": k + 1, "kemurnian_min": purity, "cluster_dipecah": None,
+               "ukuran_sub": None, "cramers_v_mikroskop": None, "pct_M2_sub": None, "diterima": False}
+        if purity >= PURITY_MIN and len(cnt) == k and (cnt == 2).sum() == 1:
+            c = int(cnt.idxmax())
+            kids = parent[parent == c].index.tolist()
+            s = (lab == c) & np.isin(new, kids)
+            v = cramers_v(new[s], mic[s])
+            rec.update(cluster_dipecah=c, ukuran_sub=[int((new[s] == j).sum()) for j in kids],
+                       cramers_v_mikroskop=v,
+                       pct_M2_sub=[float(100 * np.mean(mic[s][new[s] == j] == "M2")) for j in kids],
+                       diterima=bool(v < MIC_V_MAX))
+        steps.append(rec)
+        log(f"    refinement k {k}->{k + 1}: kemurnian {purity:.3f}, cluster dipecah {rec['cluster_dipecah']}, "
+            f"V mikroskop {rec['cramers_v_mikroskop']}, diterima {rec['diterima']}")
+        if not rec["diterima"]:
+            break
+        lab = np.where((lab == c) & (new == kids[1]), k, lab)
+    return relabel_by_size(lab), steps
+
+
 def plot_methods(df, agree, idec_hist, path):
     from kode.common.plot import SERIES, TEXT2, plt, savefig
     fig, axes = plt.subplots(1, 3, figsize=(14, 3.4), gridspec_kw={"wspace": .55, "width_ratios": [1.2, 1, 1]})
@@ -183,7 +235,7 @@ def plot_methods(df, agree, idec_hist, path):
     ax.grid(False)
     ax.set_title("Kesepakatan antar-metode (ARI)")
     ax = axes[2]
-    h = pd.DataFrame(idec_hist).dropna()
+    h = pd.DataFrame(idec_hist)          # baris terakhir (cek konvergensi) tidak punya KL -> celah
     ax.plot(h.epoch, h.kl, "o-", ms=3, color=SERIES[0], label="KL(P||Q)")
     ax2 = ax.twinx()
     ax2.plot(h.epoch, 100 * h.label_berubah, "s--", ms=3, color=SERIES[1], label="% label berubah")

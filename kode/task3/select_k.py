@@ -90,5 +90,5 @@ def plot(df: pd.DataFrame, k: int, path):
             ax.axhline(STAB_MIN, color=MUTED, ls=":", lw=1)
         ax.set(title=title, xlabel="k")
         ax.set_xticks(df.k[::2] if len(df) > 8 else df.k)
-    fig.suptitle(f"Pemilihan k pada latent FusionAE: k* = {k} (garis putus-putus)", fontsize=10)
+    fig.suptitle(f"Pemilihan k pada latent FusionAE: k* = {k} (garis putus-putus)", fontsize=10, y=1.06)
     savefig(fig, path)

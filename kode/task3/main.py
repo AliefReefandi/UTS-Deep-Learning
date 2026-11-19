@@ -3,7 +3,7 @@
   a. eda.py        - distorsi gambar (rotasi, skala, brightness, M1 vs M2) & spektrum (shift, baseline, spike)
   b. ssl.py        - SimCLR per modalitas (augmentasi dari EDA) -> embedding
   c. fusion.py     - blok per modalitas, koreksi mikroskop, FusionAE (deep) vs concat; ablasi satu modalitas
-  d. cluster.py    - KMeans/GMM (klasik) vs IDEC (deep clustering, model utama)
+  d. cluster.py    - KMeans/GMM (klasik) vs IDEC (deep clustering, model utama) + refinement hierarkis
   e. select_k.py   - k dari silhouette, Davies-Bouldin, Calinski-Harabasz, stabilitas bootstrap (+ BIC)
   f. viz.py        - UMAP/t-SNE, profil cluster, pasangan cluster yang sulit dipisahkan
 Output: <pred_dir>/cluster.csv dan <pred_dir>/prediksi/cluster.csv  (id_sampel,cluster ; integer)
@@ -83,13 +83,33 @@ def run_clustering(args, log=print):
     C.plot_methods(mdf, agree, idec_out["history"], cdir / "15_perbandingan_metode.png")
     summary["metode"] = mdf.to_dict("records")
     summary["metode_final"] = final_name
+    summary["ukuran_cluster_sebelum_refinement"] = np.bincount(final).tolist()
+    log(f"  metode final: {final_name}; ukuran cluster {np.bincount(final).tolist()}")
+
+    # ---- d. refinement hierarkis pada blok gambar: SELALU dihitung sebagai analisis alternatif;
+    #      hanya dipakai sebagai hasil final jika --refine (default: tidak, k final = k dari aturan 3e)
+    log("[task3-d] refinement hierarkis (blok gambar) - analisis alternatif")
+    final_k = final
+    alt, steps = C.refine_by_block(final, blocks["gambar"], mic, args.seed, log=log)
+    k_alt = int(alt.max()) + 1
+    pd.DataFrame(steps).to_csv(cdir / "tabel_refinement.csv", index=False)
+    summary["refinement"] = {"dipakai_final": bool(args.refine), "k_alternatif": k_alt, "langkah": steps,
+                             "tabel_silang_k_vs_alternatif": pd.crosstab(final, alt).to_dict()}
+    alt_csv = pd.DataFrame({"id_sampel": meta.id_sampel, "cluster": alt.astype(int)})
+    alt_name = f"cluster_alternatif_k{k_alt}.csv"
+    alt_csv.to_csv(cdir / alt_name, index=False)
+    if args.refine:
+        final = alt
+    k_final = int(final.max()) + 1
+    summary["k"]["final"] = k_final
     summary["ukuran_cluster"] = np.bincount(final).tolist()
-    log(f"  metode final: {final_name}; ukuran cluster {summary['ukuran_cluster']}")
+    summary["pct_M2_per_cluster"] = [float(100 * np.mean(mic[final == c] == "M2")) for c in range(k_final)]
+    log(f"  k final = {k_final}; ukuran cluster {summary['ukuran_cluster']}")
 
     # ---- c. ablasi satu modalitas (butuh label final)
     log("[task3-c] ablasi modalitas")
     abl, single = Fu.ablation({"gambar saja": blocks["gambar"], "spektrum saja": blocks["spektrum"],
-                               "concat": X, "FusionAE": Z}, final, mic, k, args.seed, log)
+                               "concat": X, "FusionAE": Z}, final, mic, k_final, args.seed, log)
     abl.to_csv(cdir / "tabel_ablasi_modalitas.csv", index=False)
     summary["ablasi"] = abl.to_dict("records")
     single2 = {"gambar saja": single["gambar saja"], "spektrum saja": single["spektrum saja"]}
@@ -102,13 +122,28 @@ def run_clustering(args, log=print):
     V.plot_2d(proj, final, mic, single2, cdir / "17_umap_tsne.png")
     spec_pp = preprocess_spectrum(spec)
     V.plot_profiles(img, spec_pp, final, mic, cdir / "18_profil_cluster.png", seed=args.seed)
-    M = V.knn_overlap(space, final, seed=args.seed)
-    pairs = V.hard_pairs(M, idec_out["q"] if final_name.startswith("IDEC") else None, final)
+    # tumpang tindih diukur di ruang concat (dua modalitas, belum dipertajam IDEC): di latent IDEC
+    # semua cluster terpisah sempurna, sehingga ukuran ini tidak lagi informatif di sana
+    M = V.knn_overlap(X, final, seed=args.seed)
+    sep = {"gambar": Fu.pairwise_separability(blocks["gambar"], final, args.seed),
+           "spektrum": Fu.pairwise_separability(blocks["spektrum"], final, args.seed)}
+    pairs = V.hard_pairs(M, None, final, sep=sep)
     pairs.to_csv(cdir / "tabel_pasangan_sulit.csv", index=False)
     M.to_csv(cdir / "tabel_overlap_knn.csv")
     V.plot_hard(M, pairs, img, spec_pp, final, cdir / "19_cluster_sulit.png", seed=args.seed)
     summary["pasangan_sulit"] = pairs.to_dict("records")
     log(pairs.round(2).to_string(index=False))
+
+    # ---- f. heterogenitas di dalam cluster yang dipecah refinement (faktor tekstur x spektrum)
+    if steps and steps[0]["diterima"]:
+        from kode.task3 import heterogen as H
+        log("[task3-f] heterogenitas di dalam cluster")
+        c_h = int(steps[0]["cluster_dipecah"])
+        bim, hsum, fac = H.analyze(final_k, alt, c_h, blocks, spec_pp, mic, args.seed, log=log)
+        bim.to_csv(cdir / "tabel_bimodal_jarak_puncak.csv", index=False)
+        summary["heterogenitas"] = {"bimodal_jarak_puncak_per_cluster": bim.to_dict("records"), **hsum}
+        H.plot(bim, hsum, fac, final_k, proj, img, spec_pp, cdir / "20_heterogenitas_cluster.png",
+               cdir / "21_grid_tekstur_spektrum.png", seed=args.seed)
 
     # ---- simpan
     out = pd.DataFrame({"id_sampel": meta.id_sampel, "cluster": final.astype(int)})
@@ -116,18 +151,20 @@ def run_clustering(args, log=print):
         d.mkdir(parents=True, exist_ok=True)
         out.to_csv(d / PRED_FILE, index=False)
     np.save(cdir / "latent_final.npy", space.astype(np.float16))
-    torch.save({"fusion_ae": ae.state_dict(), "idec": idec_out["state"], "splits": splits, "k": k},
-               cdir / "fusion_idec.pt")
+    torch.save({"fusion_ae": ae.state_dict(), "idec": idec_out["state"], "splits": splits, "k": k,
+                "k_final": k_final}, cdir / "fusion_idec.pt")
     save_json(summary, cdir / "ringkasan_clustering.json")
     if not dbg:
         dst = args.results_dir / "task3" / "clustering"
         dst.mkdir(parents=True, exist_ok=True)
         for f in cdir.iterdir():
-            if f.suffix in (".png", ".csv", ".json"):
+            if f.suffix in (".png", ".csv", ".json") and f.name != alt_name:
                 shutil.copy2(f, dst / f.name)
+        shutil.copy2(cdir / alt_name, args.results_dir / "task3" / alt_name)   # pembanding, BUKAN prediksi
         args.models_dir.mkdir(parents=True, exist_ok=True)
         shutil.copy2(cdir / "fusion_idec.pt", args.models_dir / "task3_fusion_idec.pt")
-    log(f"[task3] cluster.csv -> {args.pred_dir / PRED_FILE} (k={k}, {final_name})")
+    log(f"[task3] cluster.csv -> {args.pred_dir / PRED_FILE} (k={k_final}, {final_name}"
+        f"{' + refinement' if k_final != k else ''})")
     return out
 
 
@@ -157,6 +194,9 @@ def build_parser():
     p.add_argument("--ae_epochs", type=int, default=60)
     p.add_argument("--idec_epochs", type=int, default=100)
     p.add_argument("--cluster_seeds", type=int, default=3)
+    p.add_argument("--refine", action=argparse.BooleanOptionalAction, default=False,
+                   help="pakai hasil refinement blok gambar sebagai cluster final (default: tidak; refinement "
+                        "tetap dihitung sebagai analisis alternatif, lihat cluster.refine_by_block)")
     from kode.task3.ssl import add_ssl_args
     return add_ssl_args(p)
 

@@ -80,7 +80,29 @@ def test_pipeline():
     print(f"[OK] tanpa koreksi, cluster gambar saja vs mikroskop: Cramér's V {v:.2f}")
 
 
+def test_refinement():
+    """Blok gambar: 4 tekstur, tetapi label final menggabungkan tekstur 0 dan 1 (spektrum sama).
+    Tekstur 3 terbagi dua oleh mikroskop (pergeseran besar). Harapan: 0|1 dipecah (k 3->4),
+    lalu pemecahan berikutnya (tekstur 3 menurut mikroskop) DITOLAK karena Cramér's V tinggi."""
+    rng = np.random.default_rng(0)
+    n = 4000
+    tex = rng.integers(0, 4, n)
+    mic = np.where(rng.random(n) < 0.4, "M2", "M1")
+    c = rng.normal(size=(4, 16)) * 3.0
+    c[1] = c[0] + rng.normal(size=16) * 1.2           # tekstur 0 & 1 dekat, tetapi terpisah
+    B = c[tex] + rng.normal(size=(n, 16)) * 0.3
+    B[(tex == 3) & (mic == "M2")] += 2.0              # efek mikroskop hanya di tekstur 3
+    final = np.select([tex <= 1, tex == 2], [0, 1], 2)
+    lab, steps = C.refine_by_block(final, B, mic, 0, log=lambda *_: None)
+    assert steps[0]["diterima"] and steps[0]["cramers_v_mikroskop"] < 0.1, steps
+    assert adjusted_rand_score(tex, lab) > 0.98, adjusted_rand_score(tex, lab)
+    assert not steps[-1]["diterima"] and len(steps) == 2, steps
+    print(f"[OK] refinement: k 3->4 diterima (ARI {adjusted_rand_score(tex, lab):.3f}); "
+          f"pemecahan menurut mikroskop ditolak (V {steps[-1]['cramers_v_mikroskop']:.2f})")
+
+
 if __name__ == "__main__":
     torch.use_deterministic_algorithms(False)
     test_microscope_check()
+    test_refinement()
     test_pipeline()
