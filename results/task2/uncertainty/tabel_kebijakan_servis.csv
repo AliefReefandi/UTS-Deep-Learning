@@ -1,0 +1,16 @@
+aturan,H,kerusakan_tertangkap_pct,kerusakan_terlewat,servis_terlalu_dini,rata2_sisa_umur_saat_servis
+prediksi titik <= H,10,23.26,165,16,7.38
+batas bawah 50% <= H,10,67.91,69,122,10.81
+batas bawah 80% <= H,10,87.44,27,270,14.41
+batas bawah 90% <= H,10,94.88,11,365,16.58
+batas bawah 95% <= H,10,97.21,6,425,17.9
+prediksi titik <= H,20,66.37,150,51,12.26
+batas bawah 50% <= H,20,83.86,72,142,15.38
+batas bawah 80% <= H,20,93.27,30,260,18.46
+batas bawah 90% <= H,20,96.64,15,331,20.34
+batas bawah 95% <= H,20,98.65,6,410,22.4
+prediksi titik <= H,30,79.12,138,92,17.43
+batas bawah 50% <= H,30,88.35,77,153,19.65
+batas bawah 80% <= H,30,95.01,33,283,23.38
+batas bawah 90% <= H,30,97.43,17,368,25.58
+batas bawah 95% <= H,30,98.79,8,463,28.14
