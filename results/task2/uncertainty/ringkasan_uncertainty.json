@@ -1,0 +1,53 @@
+{
+  "model": "lstm",
+  "mc_pass": 50,
+  "n_model_fold": 5,
+  "q90": [
+    -5.068396164605973,
+    4.9433516866867535
+  ],
+  "H": 20,
+  "status_test": {
+    "AMAN": 161,
+    "JADWALKAN": 75,
+    "SERVIS SEGERA": 64
+  },
+  "kalibrasi": [
+    {
+      "level": 0.5,
+      "cakupan_mc_mentah": 0.232,
+      "cakupan_terkalibrasi": 0.4993,
+      "lebar_mc_mentah": 11.0308,
+      "lebar_terkalibrasi": 22.4474,
+      "q_lo": -1.8495,
+      "q_hi": 1.2274
+    },
+    {
+      "level": 0.8,
+      "cakupan_mc_mentah": 0.4644,
+      "cakupan_terkalibrasi": 0.7967,
+      "lebar_mc_mentah": 19.2351,
+      "lebar_terkalibrasi": 43.178,
+      "q_lo": -3.9292,
+      "q_hi": 2.8384
+    },
+    {
+      "level": 0.9,
+      "cakupan_mc_mentah": 0.5402,
+      "cakupan_terkalibrasi": 0.8987,
+      "lebar_mc_mentah": 23.4296,
+      "lebar_terkalibrasi": 56.7784,
+      "q_lo": -5.0684,
+      "q_hi": 4.9434
+    },
+    {
+      "level": 0.95,
+      "cakupan_mc_mentah": 0.584,
+      "cakupan_terkalibrasi": 0.9476,
+      "lebar_mc_mentah": 26.5937,
+      "lebar_terkalibrasi": 67.1432,
+      "q_lo": -6.0557,
+      "q_hi": 6.4491
+    }
+  ]
+}

@@ -106,6 +106,25 @@ def policy_table(oof, H):
     return pd.DataFrame(rows)
 
 
+def plot_policy(pol, H, path):
+    """Grafik 15: trade-off kerusakan terlewat vs umur terbuang, dari tabel_kebijakan_servis."""
+    from kode.common.plot import SERIES, TEXT2, plt, savefig
+    p = pol[pol.H == H]
+    miss = (100 - p.kerusakan_tertangkap_pct).to_numpy()
+    life = p.rata2_sisa_umur_saat_servis.to_numpy()
+    fig, ax = plt.subplots(figsize=(5.4, 3.4))
+    ax.plot(life, miss, "o-", color=SERIES[0], zorder=3)
+    for a, x, y in zip(p.aturan, life, miss):
+        lab = "prediksi titik" if a.startswith("prediksi") else "lo " + a.split()[2]
+        ax.annotate(f"{lab}: {y:.1f}%", (x, y), fontsize=7, color=TEXT2, xytext=(6, 5),
+                    textcoords="offset points")
+    ax.set_xlim(life.min() - 1, life.max() + 3.5)
+    ax.set(xlabel="rata-rata sisa umur saat diservis (siklus terbuang)",
+           ylabel=f"% kerusakan terlewat (RUL aktual <= {H})",
+           title=f"Kebijakan servis (H = {H}); lo X% = batas bawah interval X%")
+    savefig(fig, path)
+
+
 def report(args, mdir, best, log=print):
     from kode.common.plot import MUTED, SERIES, TEXT, plt, savefig
     out = mdir / "uncertainty"
@@ -161,17 +180,7 @@ def report(args, mdir, best, log=print):
     savefig(fig, out / "14_contoh_interval_val.png")
 
     # ---- grafik 15: trade-off kebijakan servis ----
-    p = pol[pol.H == H]
-    fig, ax = plt.subplots(figsize=(5.2, 3.3))
-    miss = 100 - p.kerusakan_tertangkap_pct
-    ax.plot(p.rata2_sisa_umur_saat_servis, miss, "o-", color=SERIES[0], zorder=3)
-    for j, (_, r) in enumerate(p.iterrows()):
-        ax.annotate(r.aturan.replace(" <= H", ""), (r.rata2_sisa_umur_saat_servis, miss.iloc[j]),
-                    fontsize=7, xytext=(4, 6 if j % 2 else -11), textcoords="offset points")
-    ax.set(xlabel="rata-rata sisa umur saat diservis (siklus terbuang)",
-           ylabel=f"% kerusakan terlewat (RUL aktual <= {H})",
-           title=f"Kebijakan servis (H = {H} siklus)")
-    savefig(fig, out / "15_kebijakan_servis.png")
+    plot_policy(pol, H, out / "15_kebijakan_servis.png")
 
     summary = {"model": best, "mc_pass": int(te_mc.shape[0] // max(te_det.shape[1], 1)),
                "n_model_fold": int(te_det.shape[1]), "q90": [q_lo, q_hi], "H": H,

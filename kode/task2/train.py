@@ -86,9 +86,14 @@ def train_model(name, bank_tr, idx_tr, bank_va, idx_va, cfg, ckpt_path, device, 
             scaler.scale(loss).backward()
             scaler.unscale_(opt)
             nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+            scale = scaler.get_scale()
             scaler.step(opt)
             scaler.update()
-            sched.step()
+            # AMP: jika gradien inf/NaN, GradScaler melewati opt.step() dan menurunkan scale.
+            # Scheduler hanya maju jika optimizer benar-benar melangkah (menghilangkan warning
+            # "lr_scheduler.step() before optimizer.step()"; tanpa AMP/di CPU tidak ada perubahan).
+            if scaler.get_scale() >= scale:
+                sched.step()
             tot += loss.item()
         p_va = predict(model, bank_va, idx_va)
         r = float(np.sqrt(np.mean((p_va - y_va) ** 2)))

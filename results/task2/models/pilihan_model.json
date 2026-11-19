@@ -1,0 +1,4 @@
+{
+  "model_terbaik": "lstm",
+  "n_fold_ensemble": 5
+}
