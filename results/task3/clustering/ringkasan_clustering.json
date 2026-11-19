@@ -1,0 +1,398 @@
+{
+  "n": 36000,
+  "device": "cpu",
+  "fusion": {
+    "blok": {
+      "gambar": {
+        "dim": 16,
+        "varians_dijelaskan": 0.9525241112141286
+      },
+      "spektrum": {
+        "dim": 14,
+        "varians_dijelaskan": 0.9524504039419271
+      },
+      "cek_mikroskop": {
+        "cramers_v_cluster_spektrum_vs_mikroskop": {
+          "3": 0.0,
+          "4": 0.0014628031754995643,
+          "6": 0.0,
+          "8": 0.0
+        },
+        "maks": 0.0014628031754995643,
+        "koreksi_dipakai": true
+      }
+    },
+    "fusion_ae": {
+      "mse_penuh": 0.0002543376758694649,
+      "R2_gambar_dari_modalitas_lain": 0.6146644055843353,
+      "R2_spektrum_dari_modalitas_lain": 0.6737856864929199
+    }
+  },
+  "k": {
+    "otomatis": 6,
+    "dipakai": 6,
+    "override": false,
+    "final": 6
+  },
+  "metode": [
+    {
+      "metode": "KMeans (concat)",
+      "jenis": "klasik",
+      "silhouette_ruang_sendiri": 0.5113891959190369,
+      "silhouette_latent_FusionAE": 0.47152993083000183,
+      "stabilitas_antar_seed_ARI": 1.0,
+      "cramers_v_mikroskop": 0.0,
+      "cluster_terkecil_pct": 10.155555555555555,
+      "cluster_terbesar_pct": 27.897222222222222,
+      "final": false
+    },
+    {
+      "metode": "KMeans (FusionAE)",
+      "jenis": "klasik",
+      "silhouette_ruang_sendiri": 0.47152993083000183,
+      "silhouette_latent_FusionAE": 0.47152993083000183,
+      "stabilitas_antar_seed_ARI": 1.0,
+      "cramers_v_mikroskop": 0.0,
+      "cluster_terkecil_pct": 10.155555555555555,
+      "cluster_terbesar_pct": 27.897222222222222,
+      "final": false
+    },
+    {
+      "metode": "GMM (FusionAE)",
+      "jenis": "klasik",
+      "silhouette_ruang_sendiri": 0.378365695476532,
+      "silhouette_latent_FusionAE": 0.378365695476532,
+      "stabilitas_antar_seed_ARI": 0.8383587289820476,
+      "cramers_v_mikroskop": 0.0,
+      "cluster_terkecil_pct": 10.155555555555555,
+      "cluster_terbesar_pct": 24.125,
+      "final": false
+    },
+    {
+      "metode": "IDEC (FusionAE)",
+      "jenis": "deep",
+      "silhouette_ruang_sendiri": 0.7017642259597778,
+      "silhouette_latent_FusionAE": 0.47152993083000183,
+      "stabilitas_antar_seed_ARI": 1.0,
+      "cramers_v_mikroskop": 0.0,
+      "cluster_terkecil_pct": 10.155555555555555,
+      "cluster_terbesar_pct": 27.897222222222222,
+      "final": true
+    }
+  ],
+  "metode_final": "IDEC (FusionAE)",
+  "ukuran_cluster_sebelum_refinement": [
+    10043,
+    8685,
+    4979,
+    4340,
+    4297,
+    3656
+  ],
+  "refinement": {
+    "dipakai_final": false,
+    "k_alternatif": 7,
+    "langkah": [
+      {
+        "k_dari": 6,
+        "k_ke": 7,
+        "kemurnian_min": 0.998848147437128,
+        "cluster_dipecah": 0,
+        "ukuran_sub": [
+          4840,
+          5203
+        ],
+        "cramers_v_mikroskop": 0.09798855315877365,
+        "pct_M2_sub": [
+          45.04132231404959,
+          35.38343263501826
+        ],
+        "diterima": true
+      },
+      {
+        "k_dari": 7,
+        "k_ke": 8,
+        "kemurnian_min": 0.9985558077161131,
+        "cluster_dipecah": 1,
+        "ukuran_sub": [
+          1680,
+          7005
+        ],
+        "cramers_v_mikroskop": 0.37273273770821747,
+        "pct_M2_sub": [
+          76.30952380952381,
+          30.235546038543898
+        ],
+        "diterima": false
+      }
+    ],
+    "tabel_silang_k_vs_alternatif": {
+      "0": {
+        "0": 0,
+        "1": 8685,
+        "2": 0,
+        "3": 0,
+        "4": 0,
+        "5": 0
+      },
+      "1": {
+        "0": 5203,
+        "1": 0,
+        "2": 0,
+        "3": 0,
+        "4": 0,
+        "5": 0
+      },
+      "2": {
+        "0": 0,
+        "1": 0,
+        "2": 4979,
+        "3": 0,
+        "4": 0,
+        "5": 0
+      },
+      "3": {
+        "0": 4840,
+        "1": 0,
+        "2": 0,
+        "3": 0,
+        "4": 0,
+        "5": 0
+      },
+      "4": {
+        "0": 0,
+        "1": 0,
+        "2": 0,
+        "3": 4340,
+        "4": 0,
+        "5": 0
+      },
+      "5": {
+        "0": 0,
+        "1": 0,
+        "2": 0,
+        "3": 0,
+        "4": 4297,
+        "5": 0
+      },
+      "6": {
+        "0": 0,
+        "1": 0,
+        "2": 0,
+        "3": 0,
+        "4": 0,
+        "5": 3656
+      }
+    }
+  },
+  "ukuran_cluster": [
+    10043,
+    8685,
+    4979,
+    4340,
+    4297,
+    3656
+  ],
+  "pct_M2_per_cluster": [
+    40.03783729961167,
+    39.14795624640185,
+    40.188792930307294,
+    39.953917050691246,
+    40.027926460321154,
+    40.70021881838075
+  ],
+  "ablasi": [
+    {
+      "representasi": "gambar saja",
+      "dim": 16,
+      "AMI_vs_final": 0.9986435896665005,
+      "ARI_vs_final": 0.9991316941855278,
+      "akurasi_kNN_cluster_final": 1.0,
+      "cramers_v_mikroskop": 0.0,
+      "pasangan_final_tak_terpisah": "",
+      "akurasi_pasangan_min": 1.0
+    },
+    {
+      "representasi": "spektrum saja",
+      "dim": 14,
+      "AMI_vs_final": 0.8014638993209504,
+      "ARI_vs_final": 0.6874629328278751,
+      "akurasi_kNN_cluster_final": 0.7718999999999999,
+      "cramers_v_mikroskop": 0.0,
+      "pasangan_final_tak_terpisah": "2-5, 3-4",
+      "akurasi_pasangan_min": 0.4795
+    },
+    {
+      "representasi": "concat",
+      "dim": 30,
+      "AMI_vs_final": 1.0,
+      "ARI_vs_final": 1.0,
+      "akurasi_kNN_cluster_final": 1.0,
+      "cramers_v_mikroskop": 0.0,
+      "pasangan_final_tak_terpisah": "",
+      "akurasi_pasangan_min": 1.0
+    },
+    {
+      "representasi": "FusionAE",
+      "dim": 16,
+      "AMI_vs_final": 1.0,
+      "ARI_vs_final": 1.0,
+      "akurasi_kNN_cluster_final": 1.0,
+      "cramers_v_mikroskop": 0.0,
+      "pasangan_final_tak_terpisah": "",
+      "akurasi_pasangan_min": 1.0
+    }
+  ],
+  "pasangan_sulit": [
+    {
+      "cluster_a": 3,
+      "cluster_b": 4,
+      "overlap_kNN_pct": 0.0,
+      "akurasi_pasangan_gambar": 1.0,
+      "akurasi_pasangan_spektrum": 0.4795,
+      "akurasi_satu_modalitas_min": 0.4795
+    },
+    {
+      "cluster_a": 2,
+      "cluster_b": 5,
+      "overlap_kNN_pct": 0.0,
+      "akurasi_pasangan_gambar": 1.0,
+      "akurasi_pasangan_spektrum": 0.515,
+      "akurasi_satu_modalitas_min": 0.515
+    },
+    {
+      "cluster_a": 0,
+      "cluster_b": 1,
+      "overlap_kNN_pct": 0.0,
+      "akurasi_pasangan_gambar": 1.0,
+      "akurasi_pasangan_spektrum": 1.0,
+      "akurasi_satu_modalitas_min": 1.0
+    }
+  ],
+  "heterogenitas": {
+    "bimodal_jarak_puncak_per_cluster": [
+      {
+        "cluster": 0,
+        "n": 10043,
+        "n_valid": 10043,
+        "median": 21.0,
+        "delta_bic": 4488.141988237672,
+        "mode_1": 19.992033933416938,
+        "mode_2": 24.01091523373705,
+        "jarak_mode_per_std": 4.291272952739485,
+        "bobot_min": 0.4215391042660716,
+        "bimodal": true
+      },
+      {
+        "cluster": 1,
+        "n": 8685,
+        "n_valid": 8685,
+        "median": 40.0,
+        "delta_bic": -96.05629174864953,
+        "mode_1": 39.14964818044298,
+        "mode_2": 40.24416356253881,
+        "jarak_mode_per_std": 1.139314017327371,
+        "bobot_min": 0.18773255620456047,
+        "bimodal": false
+      },
+      {
+        "cluster": 2,
+        "n": 4979,
+        "n_valid": 4979,
+        "median": 32.0,
+        "delta_bic": -50.32398419938727,
+        "mode_1": 31.03961186778552,
+        "mode_2": 32.18065059129204,
+        "jarak_mode_per_std": 1.5005118603779295,
+        "bobot_min": 0.1620175563594157,
+        "bimodal": false
+      },
+      {
+        "cluster": 3,
+        "n": 4340,
+        "n_valid": 4340,
+        "median": 35.0,
+        "delta_bic": -46.9982550118857,
+        "mode_1": 33.97235526376415,
+        "mode_2": 35.348779342817515,
+        "jarak_mode_per_std": 1.4043696795717797,
+        "bobot_min": 0.27649659987290565,
+        "bimodal": false
+      },
+      {
+        "cluster": 4,
+        "n": 4297,
+        "n_valid": 4297,
+        "median": 35.0,
+        "delta_bic": -46.90343670936454,
+        "mode_1": 33.95695929944745,
+        "mode_2": 35.36253855705807,
+        "jarak_mode_per_std": 1.4222246061263526,
+        "bobot_min": 0.2794522046908356,
+        "bimodal": false
+      },
+      {
+        "cluster": 5,
+        "n": 3656,
+        "n_valid": 3656,
+        "median": 32.0,
+        "delta_bic": -45.87202096740839,
+        "mode_1": 31.800399590099776,
+        "mode_2": 32.990490513616614,
+        "jarak_mode_per_std": 1.544935562419314,
+        "bobot_min": 0.16473078429479499,
+        "bimodal": false
+      }
+    ],
+    "cluster": 0,
+    "n": 10043,
+    "n_spektrum_valid": 10043,
+    "label_tekstur_alternatif": [
+      1,
+      3
+    ],
+    "tabel_silang_tekstur_x_spektrum": {
+      "0": {
+        "0": 3058,
+        "1": 2875
+      },
+      "1": {
+        "0": 2145,
+        "1": 1965
+      }
+    },
+    "cramers_v": {
+      "tekstur_vs_spektrum": 0.0,
+      "tekstur_vs_mikroskop": 0.09798855315877365,
+      "spektrum_vs_mikroskop": 0.0
+    },
+    "pct_M2": {
+      "tekstur_0": 35.38343263501826,
+      "tekstur_1": 45.04132231404959,
+      "spektrum_0": 40.01348390359009,
+      "spektrum_1": 40.07299270072993
+    },
+    "akurasi_tebak_faktor": {
+      "tekstur_dari_gambar": 0.9975103567809398,
+      "tekstur_dari_spektrum": 0.5143877947641986,
+      "spektrum_dari_gambar": 0.5907597088004379,
+      "spektrum_dari_spektrum": 0.9809816978973107
+    },
+    "jarak_puncak_median": {
+      "spektrum_0": 20.0,
+      "spektrum_1": 24.0
+    },
+    "posisi_puncak_median": {
+      "spektrum_0": [
+        20.0,
+        40.0,
+        85.0
+      ],
+      "spektrum_1": [
+        20.0,
+        44.0,
+        85.0
+      ]
+    }
+  }
+}

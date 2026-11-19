@@ -1,0 +1,4 @@
+cluster_a,cluster_b,overlap_kNN_pct,akurasi_pasangan_gambar,akurasi_pasangan_spektrum,akurasi_satu_modalitas_min
+3,4,0.0,1.0,0.4795,0.4795
+2,5,0.0,1.0,0.515,0.515
+0,1,0.0,1.0,1.0,1.0

@@ -1,0 +1,38 @@
+{
+  "auc_mikroskop": {
+    "gambar: PSD radial": 0.883485059198479,
+    "gambar: SimCLR": 0.9904678090741008,
+    "spektrum: PCA": 0.504240225431806,
+    "spektrum: SimCLR": 0.4977760352133099
+  },
+  "retrieval_top1": {
+    "gambar: PSD radial": 0.0155,
+    "gambar: SimCLR": 0.367,
+    "spektrum: PCA": 0.018,
+    "spektrum: SimCLR": 0.796
+  },
+  "rank_efektif": {
+    "gambar: PSD radial": 14.370887756347656,
+    "gambar: SimCLR": 70.33216094970703,
+    "spektrum: PCA": 17.638277053833008,
+    "spektrum: SimCLR": 37.562095642089844
+  },
+  "dim": {
+    "gambar: PSD radial": 32,
+    "gambar: SimCLR": 256,
+    "spektrum: PCA": 32,
+    "spektrum: SimCLR": 128
+  },
+  "ami_lintas_modalitas": {
+    "klasik": {
+      "3": 0.7075569561646157,
+      "6": 0.5319563624517845,
+      "10": 0.4477789250319599
+    },
+    "SimCLR": {
+      "3": 0.541496713849264,
+      "6": 0.8048560373342768,
+      "10": 0.6077847384353611
+    }
+  }
+}
