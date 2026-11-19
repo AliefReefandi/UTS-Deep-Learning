@@ -1,0 +1,17 @@
+{
+  "modalitas": "gambar",
+  "n_params_encoder": 1225824,
+  "n_params_total": 1325024,
+  "dim_embedding": 256,
+  "epoch": 150,
+  "detik_training": 850.5409798622131,
+  "cfg": {
+    "epochs": 150,
+    "bs": 512,
+    "lr": 0.001,
+    "wd": 0.0001,
+    "tau": 0.2,
+    "warmup": 0.05,
+    "resume": true
+  }
+}

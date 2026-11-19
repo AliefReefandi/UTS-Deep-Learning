@@ -1,0 +1,17 @@
+{
+  "modalitas": "spektrum",
+  "n_params_encoder": 244192,
+  "n_params_total": 277472,
+  "dim_embedding": 128,
+  "epoch": 100,
+  "detik_training": 103.23024845123291,
+  "cfg": {
+    "epochs": 100,
+    "bs": 512,
+    "lr": 0.001,
+    "wd": 0.0001,
+    "tau": 0.2,
+    "warmup": 0.05,
+    "resume": true
+  }
+}

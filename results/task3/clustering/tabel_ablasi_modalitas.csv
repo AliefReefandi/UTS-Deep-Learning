@@ -1,0 +1,5 @@
+representasi,dim,AMI_vs_final,ARI_vs_final,akurasi_kNN_cluster_final,cramers_v_mikroskop,pasangan_final_tak_terpisah,akurasi_pasangan_min
+gambar saja,16,0.9986435896665005,0.9991316941855278,1.0,0.0,,1.0
+spektrum saja,14,0.8014638993209504,0.6874629328278751,0.7718999999999999,0.0,"2-5, 3-4",0.4795
+concat,30,1.0,1.0,1.0,0.0,,1.0
+FusionAE,16,1.0,1.0,1.0,0.0,,1.0
