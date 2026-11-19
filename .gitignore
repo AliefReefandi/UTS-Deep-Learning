@@ -10,3 +10,6 @@ outputs/
 __pycache__/
 *.pyc
 .ipynb_checkpoints/
+
+# HTML antara saat membangun laporan.pdf (laporan/build_pdf.py)
+laporan/laporan.html
