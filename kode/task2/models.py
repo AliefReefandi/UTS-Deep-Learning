@@ -65,7 +65,53 @@ class TCNReg(nn.Module):
         return self.head(h[:, :, -1])
 
 
-MODELS = {"lstm": LSTMReg, "tcn": TCNReg}
+class AttnBlock(nn.Module):
+    """Pre-norm Transformer block. Ditulis manual (bukan nn.TransformerEncoderLayer) karena layer
+    bawaan memakai 'fast path' saat eval() yang melewati dropout -> MC dropout diam-diam mati.
+    Di sini semua dropout adalah nn.Dropout biasa, sehingga bisa dinyalakan saat inferensi."""
+
+    def __init__(self, d: int, heads: int, p: float):
+        super().__init__()
+        self.n1, self.n2 = nn.LayerNorm(d), nn.LayerNorm(d)
+        self.attn = nn.MultiheadAttention(d, heads, dropout=0.0, batch_first=True)
+        self.ff = nn.Sequential(nn.Linear(d, 2 * d), nn.GELU(), nn.Dropout(p), nn.Linear(2 * d, d))
+        self.drop = nn.Dropout(p)
+
+    def forward(self, x, pad):
+        h = self.n1(x)
+        a, _ = self.attn(h, h, h, key_padding_mask=pad, need_weights=False)
+        x = x + self.drop(a)
+        return x + self.drop(self.ff(self.n2(x)))
+
+
+class TransformerReg(nn.Module):
+    """Transformer encoder kecil: proyeksi linear + embedding posisi (dipelajari) -> 2 blok
+    self-attention -> token terakhir (siklus saat prediksi) ke head.
+    - Padding kiri (mask=0) diabaikan lewat key_padding_mask, jadi attention hanya ke data asli.
+    - Tidak perlu causal mask: window hanya berisi masa lalu sampai t (kebocoran sudah dicegah
+      di windowing), dan yang dibaca hanya output di t.
+    Beda dari LSTM/TCN: tiap langkah bisa langsung 'melihat' langkah mana pun di window."""
+
+    def __init__(self, n_feat: int, d: int = 64, heads: int = 4, layers: int = 2, p: float = 0.2,
+                 max_len: int = 512):
+        super().__init__()
+        self.inp = nn.Linear(n_feat, d)
+        self.pos = nn.Parameter(torch.zeros(1, max_len, d))
+        nn.init.normal_(self.pos, std=0.02)
+        self.blocks = nn.ModuleList([AttnBlock(d, heads, p) for _ in range(layers)])
+        self.norm = nn.LayerNorm(d)
+        self.head = Head(d, p)
+
+    def forward(self, x):
+        W = x.shape[1]
+        pad = x[:, :, -1] < 0.5                       # True = padding (diabaikan attention)
+        h = self.inp(x) + self.pos[:, -W:]            # posisi dihitung dari kanan: t selalu sama
+        for b in self.blocks:
+            h = b(h, pad)
+        return self.head(self.norm(h[:, -1]))
+
+
+MODELS = {"lstm": LSTMReg, "tcn": TCNReg, "transformer": TransformerReg}
 
 
 def build(name: str, n_feat: int) -> nn.Module:

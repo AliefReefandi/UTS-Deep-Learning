@@ -1,11 +1,13 @@
 """Task 2 - Prediksi Remaining Useful Life (RUL), cap 150.
 
-  python -m kode.task2.main [--debug] [--models baseline lstm tcn] [--run_folds 2] ...
+  python -m kode.task2.main [--debug] [--models baseline lstm tcn transformer] [--run_folds 2] ...
 
 Alur per fold (split per mesin, 5-fold):
   fit Preprocessor di mesin train -> window (W=50, padding+mask) -> latih tiap model
   -> evaluasi pada val terpotong (meniru test) -> prediksi test.
-Prediksi test akhir = rata-rata model fold (ensemble 5 model) dari arsitektur terbaik.
+Prediksi test akhir = rata-rata model fold (ensemble 5 model) dari arsitektur DL terbaik
+(RMSE val gabungan; baseline non-DL hanya pembanding). Lalu 2f: interval MC dropout terkalibrasi
++ kebijakan servis (uncertainty.py). Hasil final disalin ke --results_dir/task2 dan --models_dir.
 Resume: tiap (model, fold) yang sudah selesai disimpan ke <task_out>/models/ dan dilewati;
 training yang terputus dilanjutkan dari checkpoint per epoch.
 Output: <pred_dir>/prediksi_rul.csv (id_unit,rul ; rul di 0..150) + tabel/grafik di <task_out>/models/.
@@ -13,7 +15,9 @@ Output: <pred_dir>/prediksi_rul.csv (id_unit,rul ; rul di 0..150) + tabel/grafik
 from __future__ import annotations
 
 import argparse
+import copy
 import json
+import shutil
 import time
 
 import numpy as np
@@ -41,6 +45,15 @@ def failure_modes(tr: pd.DataFrame) -> pd.Series:
     z = pp.transform(tr)
     near = z[tr.rul_raw < 10].groupby("id_unit")["s11"].mean()
     return (near > 0).map({True: "B", False: "A"}).rename("mode")
+
+
+def preprocessor_state(pp, W) -> dict:
+    """Statistik yang di-fit di mesin train fold ini; dibutuhkan untuk inferensi ulang model."""
+    return {"W": W, "sensors": pp.sensors_, "fitur": pp.sensors_ + ["umur(siklus/300)", "mask"],
+            "mean_per_kond": pp.mean_[pp.sensors_].to_dict("index"),
+            "std_per_kond": pp.std_[pp.sensors_].to_dict("index"),
+            "sigma_spike": pp.sigma_.to_dict(), "spike_k": pp.spike_k, "spike_win": pp.spike_win,
+            "clip": pp.clip}
 
 
 def config(args) -> dict:
@@ -86,8 +99,14 @@ def run_fold(k, tr_units, va_units, tr, te, args, cfg, device, mdir, log):
             m, st = train_model(name, banks["tr"], idx_tr, banks["va"], idx_va, cfg, ckpt, device,
                                 seed=args.seed + k, log=log)
             p_va, p_te = predict(m, banks["va"], idx_va), predict(m, banks["te"], idx_te)
+            # 2f: MC dropout - `mc` forward pass dengan dropout aktif (seed tetap -> reproducible)
             import torch
+            torch.manual_seed(args.seed + 1000 + k)
+            np.savez_compressed(mdir / name / f"fold{k}_mc.npz",
+                                va=predict(m, banks["va"], idx_va, mc=args.mc).astype(np.float16),
+                                te=predict(m, banks["te"], idx_te, mc=args.mc).astype(np.float16))
             torch.save(m.state_dict(), mdir / name / f"fold{k}_best.pt")
+            save_json(preprocessor_state(pp, args.W), mdir / name / f"fold{k}_preprocessor.json")
             extra = {"n_params": n_params(m), "epochs": st["epoch"], "history": st["history"]}
         sec = time.time() - t0
         meta_va.assign(pred=p_va, fold=k).to_csv(mdir / name / f"fold{k}_val.csv", index=False)
@@ -97,11 +116,16 @@ def run_fold(k, tr_units, va_units, tr, te, args, cfg, device, mdir, log):
         log(f"  [{name} fold {k}] RMSE {res['rmse']:.2f} | skor/300 {res['skor_per_300']:.0f} | {sec:.0f}s")
 
 
+def fold_results(d):
+    """Ringkasan hasil per fold: fold<k>.json saja (bukan fold<k>_preprocessor.json)."""
+    return sorted(f for f in d.glob("fold*.json") if f.stem[4:].isdigit())
+
+
 def summarize_all(args, mdir, modes, log):
     from kode.common.plot import SERIES, plt, savefig
     rows, oof, ranges, modes_tab = [], {}, [], []
     for name in args.models:
-        files = sorted((mdir / name).glob("fold*.json"))
+        files = fold_results(mdir / name)
         if not files:
             continue
         res = [json.loads(f.read_text()) for f in files]
@@ -152,7 +176,7 @@ def summarize_all(args, mdir, modes, log):
         fig, axes = plt.subplots(1, len(dl), figsize=(4 * len(dl), 2.8), sharey=True)
         axes = np.atleast_1d(axes)
         for ax, name in zip(axes, dl):
-            for f in sorted((mdir / name).glob("fold*.json")):
+            for f in fold_results(mdir / name):
                 h = pd.DataFrame(json.loads(f.read_text())["history"])
                 ax.plot(h.epoch, h.val_rmse, lw=1.2, label=f"val {f.stem}")
                 ax.plot(h.epoch, h.train_rmse, lw=.8, ls=":", color="#8a8984")
@@ -163,8 +187,15 @@ def summarize_all(args, mdir, modes, log):
     return tab
 
 
+def pick_best(tab) -> str:
+    """Model utama WAJIB deep learning: pilih RMSE gabungan terendah di antara model DL saja.
+    Baseline hanya pembanding."""
+    dl = tab[tab.model != "baseline"]
+    return (dl if len(dl) else tab).sort_values("rmse_gabungan").iloc[0]["model"]
+
+
 def write_prediction(args, mdir, tab, log):
-    best = tab.sort_values("rmse_gabungan").iloc[0]["model"]
+    best = pick_best(tab)
     preds = [pd.read_csv(f).set_index("id_unit").pred for f in sorted((mdir / best).glob("fold*_test.csv"))]
     ens = pd.concat(preds, axis=1)
     out = pd.DataFrame({"id_unit": ens.index, "rul": ens.mean(axis=1).clip(0, RUL_CAP).round(2).values})
@@ -174,6 +205,8 @@ def write_prediction(args, mdir, tab, log):
         log(f"[task2] --no-write_pred: prediksi hanya disimpan di {mdir / PRED_FILE}")
         return mdir / PRED_FILE
     out.to_csv(path, index=False)
+    (args.pred_dir / "prediksi").mkdir(exist_ok=True)
+    out.to_csv(args.pred_dir / "prediksi" / PRED_FILE, index=False)    # salinan di prediksi/
     ens.assign(mean=ens.mean(axis=1), std=ens.std(axis=1)).to_csv(mdir / f"test_prediksi_per_fold_{best}.csv")
     log(f"[task2] model terbaik: {best} (ensemble {len(preds)} fold) -> {path}")
     save_json({"model_terbaik": best, "n_fold_ensemble": len(preds)}, mdir / "pilihan_model.json")
@@ -195,7 +228,11 @@ def run(args):
         logf.flush()
 
     cfg = config(args)
-    log(f"[task2] device={device} models={args.models} cfg={cfg}")
+    log(f"[task2] device={device} models={args.models} cfg={cfg} mc={args.mc}")
+    if args.eda:                                   # 2a-c: grafik EDA & window (bagian dari run_all)
+        from kode.task2 import eda, windows
+        eda.run(copy.copy(args))
+        windows.report(copy.copy(args), args.W)
     tr, te = load_raw(args)
     tr = add_rul_label(tr)
     modes = failure_modes(tr)
@@ -206,13 +243,48 @@ def run(args):
         run_fold(k, *folds[k], tr, te, args, cfg, device, mdir, log)
     tab = summarize_all(args, mdir, modes, log)
     path = write_prediction(args, mdir, tab, log)
+    best = pick_best(tab)
+    if best != "baseline":
+        from kode.task2.uncertainty import report as unc_report
+        unc_report(args, mdir, best, log)
+    if args.write_pred:
+        export(args, mdir, best, log)
     logf.close()
     return path
 
 
+def export(args, mdir, best, log):
+    """Salin hasil final ke results/task2/ (grafik & tabel laporan) dan models/ (bobot model).
+    Checkpoint per epoch, log mentah, dan CSV per fold tetap di <out_dir> (tidak di-commit)."""
+    dst = args.results_dir / "task2"
+    for sub in ("eda", "windows"):
+        if (args.task_out / sub).exists():
+            shutil.copytree(args.task_out / sub, dst / sub, dirs_exist_ok=True)
+    (dst / "models").mkdir(parents=True, exist_ok=True)
+    for f in mdir.iterdir():
+        if f.is_file() and f.suffix in (".png", ".csv", ".json", ".txt"):
+            shutil.copy2(f, dst / "models" / f.name)
+    for name in args.models:                       # ringkasan per fold (kecil) untuk tiap model
+        for f in fold_results(mdir / name):
+            (dst / "models" / name).mkdir(exist_ok=True)
+            shutil.copy2(f, dst / "models" / name / f.name)
+    if (mdir / "uncertainty").exists():
+        shutil.copytree(mdir / "uncertainty", dst / "uncertainty", dirs_exist_ok=True)
+    args.models_dir.mkdir(parents=True, exist_ok=True)
+    weights = sorted((mdir / best).glob("fold*_best.pt"))
+    for f in weights + sorted((mdir / best).glob("fold*_preprocessor.json")):
+        shutil.copy2(f, args.models_dir / f"task2_{best}_{f.name}")
+    log(f"[task2] hasil final -> {dst} ; bobot {best} ({len(weights)} fold) -> {args.models_dir}")
+
+
 def build_parser():
     p = add_common_args(argparse.ArgumentParser(description="Task 2 - RUL"))
-    p.add_argument("--models", nargs="+", default=["baseline", "lstm", "tcn"])
+    p.add_argument("--models", nargs="+", default=["baseline", "lstm", "tcn", "transformer"])
+    p.add_argument("--mc", type=int, default=50, help="jumlah forward pass MC dropout (2f)")
+    p.add_argument("--service_h", type=int, default=20,
+                   help="waktu persiapan servis (siklus): servis jika batas bawah interval <= H")
+    p.add_argument("--eda", action=argparse.BooleanOptionalAction, default=True,
+                   help="buat ulang grafik EDA & window (2a-c) sebelum training")
     p.add_argument("--n_folds", type=int, default=5)
     p.add_argument("--run_folds", type=int, default=None, help="jalankan k fold pertama saja")
     p.add_argument("--W", type=int, default=50)

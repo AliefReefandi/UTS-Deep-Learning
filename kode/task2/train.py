@@ -28,7 +28,7 @@ def predict(model, bank, idx, bs: int = 4096, mc: int = 0) -> np.ndarray:
     model.eval()
     if mc:
         for m in model.modules():
-            if isinstance(m, nn.Dropout):
+            if isinstance(m, (nn.Dropout, nn.LSTM)):   # LSTM: dropout antar-lapis internal
                 m.train()
     pos_all = torch.from_numpy(bank.positions(idx)).to(bank.device)
     reps = []
