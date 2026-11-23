@@ -18,7 +18,7 @@ Dokumen ini menjelaskan pembagian tugas dan kontribusi setiap anggota dalam peng
 | Rofly Hi M Naser | Mengerjakan Task 2 dan task 3 |
 
 
-## Kontribusi Task 1 – Multimodal Classification
+## Kontribusi Task 1 – Multimodal Classification (Muhammad Alief Reefandi)
 
 - Exploratory Data Analysis (EDA) dan preprocessing dataset.
 - Pengembangan model CNN untuk citra.
@@ -29,9 +29,8 @@ Dokumen ini menjelaskan pembagian tugas dan kontribusi setiap anggota dalam peng
 - Evaluasi menggunakan tiga random seed.
 - Pembuatan prediksi data test dan visualisasi hasil.
 
-## Kontribusi Task 2 dan Task 3 (Rofly Hi M Naser)
 
-### Task 2 – Regresi time-series RUL
+## Task 2 – Regresi time-series RUL (Rofly Hi M Naser)
 
 - EDA dan preprocessing:
   - 6 rezim operasi dengan normalisasi z-score per kondisi;
@@ -42,7 +41,7 @@ Dokumen ini menjelaskan pembagian tugas dan kontribusi setiap anggota dalam peng
 - Baseline gradient boosting (non-DL) dibandingkan dengan LSTM, TCN, dan Transformer. Evaluasi RMSE dan skor asimetris, juga per rentang RUL dan per mode kerusakan.
 - Prediction interval: MC dropout × ensemble 5 fold, dikalibrasi dengan conformal. Kebijakan servis berbasis batas bawah interval.
 
-### Task 3 – Clustering multimodal
+## Task 3 – Clustering multimodal (Rofly Hi M Naser dan Muhammad Alief Reefandi)
 
 - EDA distorsi gambar (rotasi, skala, brightness, beda mikroskop) dan spektrum (shift, baseline, spike), dengan validasi estimator pada data sintetis.
 - SimCLR per modalitas dengan augmentasi yang diturunkan dari EDA. Training di Kaggle GPU, bisa resume dan bisa dihentikan dengan batas waktu.
