@@ -106,4 +106,13 @@ Dokumen ini menjelaskan pembagian tugas dan kontribusi setiap anggota dalam peng
 
 ### Muhammad Alief Reefandi (Task 1)
 
-*[Diisi oleh Alief: tool AI yang dipakai (jika ada), bagian yang dibantu, dan cara verifikasinya.]*
+**Tool:** ChatGPT (OpenAI).
+
+**Bagian yang dibantu:**
+- Panduan langkah demi langkah pengerjaan notebook Task 1 di Colab, termasuk contoh kode untuk EDA, visualisasi (citra, sinyal sensor, distribusi nilai sensor), preprocessing, model, dan eksperimen.
+- Interpretasi hasil yang saya jalankan (grafik EDA, hasil domain shift, dll.) serta draf teks interpretasi Markdown di notebook.
+- Dokumentasi repository: `kode/requirements.txt`, `results/task1/README.md`, dan template awal `kontribusi.md`.
+
+**Peran saya:** menjalankan seluruh kode dan training di Google Colab, menyesuaikan kode dengan data, memilih model final (Feature Fusion berdasarkan rata-rata tiga seed), serta mengunggah notebook, model, prediksi, dan hasil ke GitHub.
+
+**Cara verifikasi:** [Alief: lengkapi sesuai yang benar-benar dilakukan, misalnya: menjalankan ulang notebook di Colab dan memeriksa output setiap sel, membandingkan hasil tiga random seed, sanity check dengan label acak (Macro-F1 0,137 vs 0,682), dan mengecek format `prediksi_klasifikasi.csv`.]
