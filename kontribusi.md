@@ -14,8 +14,8 @@ Dokumen ini menjelaskan pembagian tugas dan kontribusi setiap anggota dalam peng
 
 | Anggota | Tanggung Jawab |
 |---|---|
-| Muhammad Alief Reefandi | Mengerjakan Task 1 |
-| Rofly Hi M Naser | Mengerjakan Task 2 (regresi RUL) dan Task 3 (clustering multimodal); `run_all.py`, `kode/validasi_csv.py`, notebook Colab/Kaggle Task 2–3; penyusunan laporan |
+| Muhammad Alief Reefandi | Mengerjakan Task 1 dan task 3 |
+| Rofly Hi M Naser | Mengerjakan Task 2 dan task 3 |
 
 
 ## Kontribusi Task 1 – Multimodal Classification
