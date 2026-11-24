@@ -1,6 +1,6 @@
 # Kontribusi Anggota Kelompok
 
-Dokumen ini menjelaskan pembagian tugas, kontribusi, serta penggunaan alat bantu selama pengerjaan UTS Deep Learning. Pengerjaan dilakukan secara individu sesuai pembagian task, sedangkan Task 3 dikerjakan secara bersama-sama.
+Dokumen ini menjelaskan pembagian tugas, kontribusi masing-masing anggota, proses kolaborasi, serta penggunaan alat bantu selama pengerjaan UTS Deep Learning. Pengerjaan Task 1 dan Task 2 dilakukan secara individu sesuai pembagian tanggung jawab, sedangkan Task 3 dikerjakan secara kolaboratif oleh kedua anggota kelompok.
 
 ## 1. Daftar Anggota
 
@@ -11,106 +11,129 @@ Dokumen ini menjelaskan pembagian tugas, kontribusi, serta penggunaan alat bantu
 
 ## 2. Pembagian Tugas
 
+Pembagian tanggung jawab dalam pengerjaan UTS Deep Learning dilakukan sebagai berikut.
+
 | Anggota | Tanggung Jawab |
 |---|---|
-| Muhammad Alief Reefandi | Pengerjaan Task 1 dan berkolaborasi dalam Task 3 |
-| Rofly Hi M Naser | Pengerjaan Task 2 dan berkolaborasi dalam Task 3 |
+| Muhammad Alief Reefandi | Bertanggung jawab atas pengerjaan Task 1 (Multimodal Classification) dan berkolaborasi dalam pengerjaan Task 3 (Multimodal Clustering). |
+| Rofly Hi M Naser | Bertanggung jawab atas pengerjaan Task 2 (Time-Series Regression RUL) dan berkolaborasi dalam pengerjaan Task 3 (Multimodal Clustering). |
 
-## 3. Kontribusi Pengerjaan
+## 3. Rincian Kontribusi Pengerjaan
 
-### Task 1 – Multimodal Classification (Muhammad Alief Reefandi)
+### 3.1 Task 1 – Multimodal Classification
 
-Task 1 dikerjakan oleh Muhammad Alief Reefandi, meliputi:
+**Penanggung jawab: Muhammad Alief Reefandi**
 
-- Melakukan EDA dan preprocessing dataset.
-- Membuat dan mengembangkan model CNN untuk data citra.
-- Mengembangkan encoder untuk data sensor.
-- Mengimplementasikan Feature Fusion dan Decision Fusion.
-- Melakukan eksperimen image-only dan sensor-only.
-- Menguji label noise, domain shift, missing modality, dan sanity check.
-- Melakukan evaluasi menggunakan tiga random seed.
-- Membuat prediksi data test serta visualisasi hasil eksperimen.
+Pengerjaan Task 1 meliputi analisis data, pengembangan model klasifikasi multimodal, pelaksanaan eksperimen, serta evaluasi performa model. Kontribusi yang dilakukan antara lain:
 
-### Task 2 – Regresi Time-Series RUL (Rofly Hi M Naser)
+- Melakukan Exploratory Data Analysis (EDA) untuk memahami karakteristik data citra, sensor, distribusi kelas, dan kondisi dataset.
+- Melakukan preprocessing data citra dan sensor, termasuk normalisasi, penanganan missing value, serta pembagian data training dan validation.
+- Mengembangkan model CNN sebagai encoder untuk mengekstraksi fitur dari data citra.
+- Mengembangkan encoder untuk memproses data sensor menggunakan pendekatan deep learning.
+- Mengimplementasikan dan membandingkan dua strategi penggabungan modalitas, yaitu Feature Fusion dan Decision Fusion.
+- Melakukan eksperimen baseline menggunakan pendekatan image-only dan sensor-only.
+- Menguji ketahanan model terhadap label noise, domain shift, dan missing modality.
+- Melakukan sanity check untuk memastikan model mempelajari pola data, bukan sekadar menghasilkan prediksi secara acak.
+- Mengevaluasi kestabilan performa model menggunakan tiga random seed.
+- Melakukan evaluasi menggunakan metrik Macro-F1 serta menyusun visualisasi hasil eksperimen.
+- Melakukan inferensi terhadap data test dan menghasilkan file prediksi klasifikasi.
 
-Task 2 dikerjakan oleh Rofly Hi M Naser, meliputi:
+### 3.2 Task 2 – Time-Series Regression RUL
+
+**Penanggung jawab: Rofly Hi M Naser**
+
+Pengerjaan Task 2 berfokus pada pengembangan sistem prediksi Remaining Useful Life (RUL) berdasarkan data time-series sensor mesin. Kontribusi yang dilakukan antara lain:
 
 - Melakukan EDA dan preprocessing data, termasuk normalisasi berdasarkan kondisi operasi, seleksi sensor, serta penanganan missing value dan spike.
-- Membuat label RUL dengan cap 150 dan sliding window berukuran 50.
-- Menyusun validasi 5-fold berdasarkan mesin untuk menyesuaikan kondisi data test.
-- Melakukan pengujian anti-kebocoran data dan uji mutasi pada pipeline preprocessing.
-- Mengembangkan dan membandingkan model baseline Gradient Boosting dengan LSTM, TCN, dan Transformer.
-- Mengevaluasi model menggunakan RMSE dan asymmetric score, termasuk berdasarkan rentang RUL dan mode kerusakan.
+- Membentuk label RUL dengan batas maksimum (*capping*) sebesar 150 siklus dan menggunakan sliding window berukuran 50.
+- Menyusun validasi 5-fold berdasarkan mesin untuk menyesuaikan karakteristik pembagian data.
+- Melakukan pengujian anti-kebocoran data (*data leakage*) dan uji mutasi pada pipeline preprocessing.
+- Mengembangkan dan membandingkan model baseline Gradient Boosting dengan model deep learning LSTM, TCN, dan Transformer.
+- Mengevaluasi performa model menggunakan RMSE dan asymmetric score, termasuk analisis berdasarkan rentang RUL dan mode kerusakan.
 - Mengembangkan prediction interval menggunakan MC Dropout, ensemble, dan conformal calibration.
-- Menyusun hasil prediksi serta analisis kebijakan servis berdasarkan batas bawah prediction interval.
+- Menyusun hasil prediksi serta melakukan analisis kebijakan servis berdasarkan batas bawah prediction interval.
 
-### Task 3 – Multimodal Clustering (Muhammad Alief Reefandi dan Rofly Hi M Naser)
+### 3.3 Task 3 – Multimodal Clustering
 
-Task 3 dikerjakan secara bersama-sama oleh kedua anggota, mulai dari analisis data, pengembangan model, eksperimen clustering, hingga evaluasi hasil.
+**Penanggung jawab: Muhammad Alief Reefandi dan Rofly Hi M Naser**
 
-- Melakukan EDA terhadap distorsi citra dan spektrum serta menguji estimator menggunakan data sintetis.
-- Menentukan augmentasi dan melakukan training SimCLR pada masing-masing modalitas.
-- Mengembangkan fusion model menggunakan FusionAE dengan modality dropout.
-- Melakukan eksperimen ablasi untuk melihat pengaruh masing-masing modalitas.
-- Membandingkan KMeans, GMM, dan IDEC dalam menentukan hasil clustering.
-- Melakukan analisis embedding menggunakan UMAP dan t-SNE.
-- Mengevaluasi cluster, pasangan data yang sulit dibedakan, heterogenitas cluster 0, serta alternatif jumlah cluster k = 7.
+Task 3 dikerjakan secara bersama-sama oleh kedua anggota kelompok. Kolaborasi mencakup analisis data, pengembangan representasi multimodal, eksperimen clustering, evaluasi, dan interpretasi hasil.
+
+Kontribusi pengerjaan meliputi:
+
+- Melakukan EDA terhadap data citra dan spektrum, termasuk analisis distorsi serta pengujian estimator menggunakan data sintetis.
+- Menentukan strategi augmentasi data dan melakukan training SimCLR pada masing-masing modalitas.
+- Mengembangkan model penggabungan modalitas menggunakan FusionAE dengan pendekatan modality dropout.
+- Melakukan eksperimen ablasi untuk menganalisis pengaruh masing-masing modalitas terhadap hasil clustering.
+- Membandingkan beberapa pendekatan clustering, yaitu KMeans, GMM, dan IDEC.
+- Melakukan analisis representasi embedding menggunakan UMAP dan t-SNE.
+- Mengevaluasi hasil clustering, termasuk pasangan data yang sulit dibedakan, heterogenitas cluster 0, serta alternatif jumlah cluster dengan k = 7.
 - Melakukan pengujian menggunakan data sintetis untuk memeriksa kemampuan model dalam mengenali pola dan cluster yang telah diketahui.
 
-Pembagian pengerjaan Task 3 dilakukan secara kolaboratif, dengan diskusi mengenai hasil eksperimen, evaluasi model, dan penentuan pendekatan yang digunakan hingga memperoleh hasil akhir.
+Kedua anggota terlibat dalam diskusi dan evaluasi hasil eksperimen untuk menentukan pendekatan yang digunakan. Dengan demikian, keputusan akhir terkait metode dan hasil Task 3 merupakan hasil kolaborasi bersama.
 
-## 4. Infrastruktur dan Integrasi
+## 4. Infrastruktur dan Integrasi Proyek
 
-Dalam pengerjaan proyek, kedua anggota turut menggunakan dan mengintegrasikan beberapa komponen pendukung, antara lain:
+Dalam proses pengembangan dan integrasi proyek, kedua anggota menggunakan serta mengembangkan beberapa komponen pendukung agar seluruh task dapat dijalankan secara terstruktur.
 
-- `run_all.py` untuk menjalankan keseluruhan task.
-- `kode/common/` untuk fungsi bersama.
-- Flag `--debug`, `--data_dir`, dan `--out_dir`.
-- `kode/validasi_csv.py` untuk memeriksa format file prediksi.
-- Notebook Google Colab/Kaggle untuk menjalankan eksperimen dan training model.
+Komponen yang digunakan meliputi:
+
+- `run_all.py` sebagai skrip untuk menjalankan keseluruhan task.
+- `kode/common/` sebagai direktori yang berisi fungsi dan komponen bersama.
+- Flag `--debug`, `--data_dir`, dan `--out_dir` untuk mendukung konfigurasi eksekusi program.
+- `kode/validasi_csv.py` untuk memeriksa kesesuaian format file prediksi.
+- Google Colab dan Kaggle Notebook sebagai lingkungan untuk menjalankan eksperimen dan training model.
+
+Integrasi dilakukan agar implementasi setiap task memiliki struktur yang konsisten dan dapat dijalankan kembali sesuai kebutuhan evaluasi.
 
 ## 5. Pull Request dan Kontribusi Repository
 
-Repository: [AliefReefandi/UTS-Deep-Learning](https://github.com/AliefReefandi/UTS-Deep-Learning)
+Seluruh implementasi dan dokumentasi dikelola melalui GitHub untuk mendukung kolaborasi, pengelolaan versi, serta integrasi hasil pengerjaan setiap anggota.
+
+**Repository:** [AliefReefandi/UTS-Deep-Learning](https://github.com/AliefReefandi/UTS-Deep-Learning)
+
+Berikut merupakan daftar Pull Request yang berkaitan dengan pengerjaan proyek:
 
 | PR | Branch | Kontribusi |
 |---|---|---|
-| #1 | `task2/rul` | Implementasi Task 2, integrasi `run_all.py`, validasi CSV, dan notebook |
-| #2 | `task3/clustering` | EDA Task 3 dan implementasi SimCLR |
-| #3 | `task2/hasil` | Hasil training Task 2, dokumentasi, dan prediksi RUL |
-| #4 | `task3/fix-notebook` | Perbaikan deteksi lingkungan Colab/Kaggle |
-| #5 | `task3/cluster` | Implementasi Task 3c–f, hasil clustering, dan `cluster.csv` |
-| #6 | `final/laporan` | Integrasi README, laporan, kontribusi, dan persiapan ujian lisan |
+| #1 | `task2/rul` | Implementasi Task 2, integrasi `run_all.py`, validasi CSV, dan notebook. |
+| #2 | `task3/clustering` | EDA Task 3 dan implementasi SimCLR. |
+| #3 | `task2/hasil` | Hasil training Task 2, dokumentasi, dan prediksi RUL. |
+| #4 | `task3/fix-notebook` | Perbaikan deteksi lingkungan Google Colab dan Kaggle. |
+| #5 | `task3/cluster` | Implementasi Task 3c–f, hasil clustering, dan `cluster.csv`. |
+| #6 | `final/laporan` | Integrasi README, laporan, dokumen kontribusi, dan persiapan ujian lisan. |
 
-## 6. Penggunaan AI
+## 6. Penggunaan Artificial Intelligence (AI)
 
-Dalam pengerjaan tugas ini, AI digunakan sebagai alat bantu untuk mendukung proses pemrograman dan pemahaman metode Deep Learning. Pengembangan kode, pelaksanaan eksperimen, pengujian, analisis hasil, serta penentuan model dilakukan oleh masing-masing anggota sesuai pembagian tugas.
+AI digunakan sebagai alat bantu selama proses pengerjaan proyek, khususnya untuk mendukung pemahaman konsep, pengembangan kode, debugging, analisis, dan penyusunan dokumentasi. Penggunaan AI disesuaikan dengan tanggung jawab masing-masing anggota.
 
-### Rofly Hi M Naser (Task 2 dan Task 3)
-
-**Tools:** Claude melalui Claude Code.
-
-AI digunakan sebagai bantuan dalam penulisan dan perbaikan kode Python, pemahaman metode yang digunakan, serta penyusunan dokumentasi dan analisis hasil eksperimen. Pada Task 2, proses pengerjaan meliputi preprocessing, pengembangan model, pengujian anti-kebocoran, dan evaluasi hasil. Pada Task 3, AI digunakan sebagai referensi dalam implementasi dan debugging beberapa bagian model clustering.
-
-Eksperimen, training, pemeriksaan hasil, pengujian ulang, serta keputusan akhir terkait metode dan model dilakukan sendiri.
-
-### Muhammad Alief Reefandi (Task 1 dan Task 3)
+### 6.1 Muhammad Alief Reefandi – Task 1 dan Task 3
 
 **Tools:** ChatGPT.
 
-AI digunakan sebagai bantuan untuk memahami tahapan pengerjaan Task 1, memperbaiki kode, dan membantu menganalisis hasil EDA maupun evaluasi model. Bantuan juga digunakan dalam memahami implementasi model, visualisasi, dan penyusunan dokumentasi.
+ChatGPT digunakan untuk membantu memahami tahapan pengerjaan Task 1, memberikan referensi implementasi kode, membantu proses debugging, serta mendukung analisis hasil EDA dan evaluasi model. AI juga digunakan sebagai alat bantu dalam memahami implementasi model, pembuatan visualisasi, dan penyusunan dokumentasi.
 
-Seluruh proses menjalankan notebook, training, melakukan eksperimen, membandingkan hasil, serta menentukan model yang digunakan dilakukan sendiri. Pada Task 3, penggunaan AI juga dilakukan sebagai bantuan teknis selama pengerjaan bersama.
+Pelaksanaan eksperimen, training model, pengujian, perbandingan hasil, serta penentuan model akhir dilakukan dan diverifikasi oleh anggota yang bersangkutan. Dalam pengerjaan Task 3, ChatGPT juga digunakan sebagai bantuan teknis selama proses kolaborasi.
 
-### Verifikasi Hasil
+### 6.2 Rofly Hi M Naser – Task 2 dan Task 3
 
-Untuk memastikan hasil pengerjaan sesuai dengan implementasi dan dapat diperiksa kembali, dilakukan beberapa langkah berikut:
+**Tools:** Claude melalui Claude Code.
+
+Claude digunakan sebagai alat bantu dalam penulisan dan perbaikan kode Python, pemahaman metode yang digunakan, serta penyusunan dokumentasi dan analisis hasil eksperimen.
+
+Pada Task 2, AI dimanfaatkan untuk mendukung proses preprocessing, pengembangan model, pengujian anti-kebocoran data, dan evaluasi hasil. Pada Task 3, AI digunakan sebagai referensi dalam implementasi dan debugging beberapa bagian model clustering.
+
+Eksperimen, training, pemeriksaan hasil, pengujian ulang, serta keputusan akhir terkait metode dan model tetap dilakukan dan diverifikasi oleh anggota yang bersangkutan.
+
+### 6.3 Verifikasi dan Validasi Hasil
+
+Untuk memastikan implementasi dan hasil eksperimen dapat diperiksa kembali, kedua anggota melakukan beberapa langkah verifikasi, antara lain:
 
 - Menjalankan pengujian otomatis pada masing-masing task.
 - Memeriksa hasil preprocessing dan prediksi.
-- Melakukan sanity check dan pengujian pada data sintetis.
-- Menjalankan debugging sebelum training penuh.
-- Memeriksa kembali angka dan hasil evaluasi pada README serta laporan.
-- Menjalankan ulang eksperimen tertentu untuk memastikan hasilnya dapat direproduksi.
+- Melakukan sanity check serta pengujian menggunakan data sintetis.
+- Melakukan debugging sebelum menjalankan training secara penuh.
+- Memeriksa kembali angka dan hasil evaluasi yang dicantumkan dalam README dan laporan.
+- Menjalankan ulang eksperimen tertentu untuk memastikan hasil dapat direproduksi.
 
-Dengan demikian, AI berperan sebagai alat bantu selama proses pengerjaan, sedangkan pemahaman, pelaksanaan eksperimen, verifikasi, dan keputusan akhir tetap menjadi tanggung jawab anggota kelompok.
+Dengan demikian, AI berperan sebagai alat bantu selama proses pengerjaan, sedangkan pemahaman, pelaksanaan eksperimen, verifikasi hasil, dan pengambilan keputusan akhir tetap menjadi tanggung jawab masing-masing anggota kelompok.
